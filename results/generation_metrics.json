@@ -1,0 +1,38 @@
+[
+  {
+    "model_key": "MiniLM",
+    "chunk_size": 512,
+    "latency_ms": 1100.45,
+    "qa_source": "manual",
+    "Answer Relevance": 0.6948,
+    "Faithfulness": 0.9663,
+    "Context Precision": 0.988
+  },
+  {
+    "model_key": "MPNet",
+    "chunk_size": 512,
+    "latency_ms": 1206.98,
+    "qa_source": "manual",
+    "Answer Relevance": 0.7292,
+    "Faithfulness": 0.9802,
+    "Context Precision": 0.99
+  },
+  {
+    "model_key": "BGE",
+    "chunk_size": 512,
+    "latency_ms": 1185.07,
+    "qa_source": "manual",
+    "Answer Relevance": 0.9123,
+    "Faithfulness": 0.9862,
+    "Context Precision": 1.0
+  },
+  {
+    "model_key": "BM25",
+    "chunk_size": 512,
+    "latency_ms": 1077.28,
+    "qa_source": "manual",
+    "Answer Relevance": 0.1416,
+    "Faithfulness": 0.9879,
+    "Context Precision": 1.0
+  }
+]

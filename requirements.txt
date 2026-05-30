@@ -1,0 +1,27 @@
+# arXiv Agent — Python dependencies
+# Install: pip install -r requirements.txt
+
+# ── Core ML / retrieval ────────────────────────────────────────────────────────
+torch>=2.2.0
+sentence-transformers>=3.0.0
+faiss-cpu>=1.7.4          # use faiss-gpu if you have CUDA
+rank-bm25>=0.2.2
+PyMuPDF>=1.25.5
+
+# ── Generation ─────────────────────────────────────────────────────────────────
+google-genai>=1.0.0
+
+# ── arXiv live fetch (new — for the fetch_arxiv tool) ─────────────────────────
+arxiv>=2.1.0
+
+# ── Data / utils ───────────────────────────────────────────────────────────────
+numpy>=1.26.0
+pandas>=2.2.0
+python-dotenv>=1.0.0
+
+# ── UI ─────────────────────────────────────────────────────────────────────────
+streamlit>=1.35.0
+
+# ── Evaluation / plots (optional — for run_experiments.py) ────────────────────
+matplotlib>=3.8.0
+seaborn>=0.13.0

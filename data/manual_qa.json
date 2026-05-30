@@ -1,0 +1,602 @@
+[
+  {
+    "paper_id": "2604.19740v1",
+    "title": "Generalization at the Edge of Stability",
+    "question": "What novel notion of dimension, inspired by Lyapunov dimension theory, is introduced in this paper to explain generalization in the chaotic optimization regime?",
+    "answer": "The paper introduces a novel notion of dimension called the 'sharpness dimension', inspired by Lyapunov dimension theory, to analyze generalization in the chaotic regime."
+  },
+  {
+    "paper_id": "2604.19738v1",
+    "title": "Phase Transitions in the Fluctuations of Functionals of Random Neural Networks",
+    "question": "According to the paper, what determines the distinct limiting regimes for the asymptotic behavior of functionals of random neural networks as network depth increases?",
+    "answer": "The asymptotic behavior of these functionals as the depth of the network increases depends crucially on the fixed points of the covariance function, resulting in three distinct limiting regimes."
+  },
+  {
+    "paper_id": "2604.19737v1",
+    "title": "Safe Continual Reinforcement Learning in Non-stationary Environments",
+    "question": "What are the two main challenges in applying existing reinforcement learning methods to real-world control systems that this paper aims to address?",
+    "answer": "This paper aims to address the challenges of non-stationarity, where system dynamics and operating conditions can change unexpectedly, and safety, where controllers must satisfy constraints throughout learning and execution without transient violations during adaptation."
+  },
+  {
+    "paper_id": "2604.19730v1",
+    "title": "FASTER: Value-Guided Sampling for Fast RL",
+    "question": "What is the core idea behind FASTER for achieving efficient test-time scaling in diffusion-based RL policies?",
+    "answer": "FASTER achieves efficient test-time scaling by modeling the process of sampling multiple action candidates and selecting the best one as a Markov Decision Process (MDP). This allows it to learn a policy and value function within the denoising space to progressively filter action candidates before the denoising process is complete, thereby avoiding the computational cost of traditional sampling methods."
+  },
+  {
+    "paper_id": "2604.19729v1",
+    "title": "FB-NLL: A Feature-Based Approach to Tackle Noisy Labels in Personalized Federated Learning",
+    "question": "How does FB-NLL differ from existing PFL approaches in its strategy for user clustering?",
+    "answer": "Unlike existing PFL approaches that rely on iterative optimization and model update trajectories for user clustering, FB-NLL decouples user clustering from iterative training dynamics by exploiting the intrinsic heterogeneity of local feature spaces."
+  },
+  {
+    "paper_id": "2604.19728v1",
+    "title": "VLA Foundry: A Unified Framework for Training Vision-Language-Action Models",
+    "question": "What is the primary advantage of VLA Foundry over existing open-source VLA efforts in terms of its training pipeline?",
+    "answer": "VLA Foundry provides a unified, shared training stack with end-to-end control from language pretraining to action-expert fine-tuning, unlike most existing efforts which specialize only on the action training stage and often use incompatible pretraining pipelines."
+  },
+  {
+    "paper_id": "2604.19724v1",
+    "title": "Benign Overfitting in Adversarial Training for Vision Transformers",
+    "question": "What is the primary contribution of this paper regarding adversarial training in Vision Transformers?",
+    "answer": "This paper presents the first theoretical analysis of adversarial training under simplified Vision Transformer architectures, aiming to explore the theoretical underpinnings of its robustness."
+  },
+  {
+    "paper_id": "2604.19722v1",
+    "title": "Adaptive MSD-Splitting: Enhancing C4.5 and Random Forests for Skewed Continuous Attributes",
+    "question": "What is the primary limitation of the standard MSD-Splitting technique that Adaptive MSD-Splitting (AMSD) aims to address?",
+    "answer": "The standard MSD-Splitting technique's rigid adherence to fixed one-standard-deviation cutoffs can lead to significant information loss when dealing with highly skewed data distributions."
+  },
+  {
+    "paper_id": "2604.19712v1",
+    "title": "Ultrametric OGP - parametric RDT \\emph{symmetric} binary perceptron connection",
+    "question": "What specific geometric feature of the solution space does this paper connect parametric RDT to, beyond statistical computational gaps?",
+    "answer": "This paper connects parametric RDT to overlap gap properties (OGPs), specifically considering s-level ultrametric OGPs (ult_s-OGPs)."
+  },
+  {
+    "paper_id": "2604.19698v1",
+    "title": "On two ways to use determinantal point processes for Monte Carlo integration",
+    "question": "What is the primary advantage of using Determinantal Point Processes (DPPs) in Monte Carlo integration compared to standard independent sampling?",
+    "answer": "DPPs enforce repulsion between evaluation points, which can lead to improved estimator consistency and variance rates compared to standard Monte Carlo estimation relying on independent samples."
+  },
+  {
+    "paper_id": "2604.19695v1",
+    "title": "Planning in entropy-regularized Markov decision processes and games",
+    "question": "What is the sample complexity of the SmoothCruiser algorithm for entropy-regularized MDPs and games, and how does it compare to non-regularized settings?",
+    "answer": "SmoothCruiser achieves a problem-independent sample complexity of order O~(1/epsilon^4) for a desired accuracy epsilon in entropy-regularized settings, whereas for non-regularized settings, there are no known algorithms with guaranteed polynomial sample complexity in the worst case."
+  },
+  {
+    "paper_id": "2604.19684v1",
+    "title": "PREF-XAI: Preference-Based Personalized Rule Explanations of Black-Box Machine Learning Models",
+    "question": "What is the core novelty of the PREF-XAI framework compared to existing XAI approaches?",
+    "answer": "PREF-XAI reframes explanation generation as a preference-driven decision problem, moving beyond model-centric approximations and heuristic user modeling to incorporate explicit representation and learning of individual user preferences."
+  },
+  {
+    "paper_id": "2604.19677v1",
+    "title": "Learning Hybrid-Control Policies for High-Precision In-Contact Manipulation Under Uncertainty",
+    "question": "What is the primary limitation of traditional pose-based reinforcement learning control policies for tasks involving force constraints, such as inserting delicate connectors?",
+    "answer": "Traditional pose-based reinforcement learning control policies have limited explicit control over force and rely on carefully tuned low-level controllers to avoid executing damaging actions when faced with tasks like inserting delicate connectors that induce force constraints."
+  },
+  {
+    "paper_id": "2604.19672v1",
+    "title": "Budgeted Online Influence Maximization",
+    "question": "What is the main difference between the proposed budgeted framework for online influence maximization and traditional cardinality-constrained approaches?",
+    "answer": "The proposed budgeted framework considers the total cost of an advertising campaign, whereas traditional approaches use a cardinality constraint on the number of influencers selected."
+  },
+  {
+    "paper_id": "2604.19669v1",
+    "title": "HardNet++: Nonlinear Constraint Enforcement in Neural Networks",
+    "question": "What limitation of existing constraint enforcement methods does HardNet++ aim to address?",
+    "answer": "HardNet++ aims to address the limitation that existing methods are often tailored to specific constraint forms (e.g., linear constraints) and do not guarantee constraint adherence during inference, whereas HardNet++ is designed to enforce general nonlinear constraints."
+  },
+  {
+    "paper_id": "2604.19667v1",
+    "title": "Chat2Workflow: A Benchmark for Generating Executable Visual Workflows with Natural Language",
+    "question": "What is the primary purpose of the Chat2Workflow benchmark introduced in this paper?",
+    "answer": "The Chat2Workflow benchmark is introduced to study whether large language models can automate the process of generating executable visual workflows directly from natural language, thereby addressing the costly, time-consuming, and error-prone nature of manual workflow construction."
+  },
+  {
+    "paper_id": "2604.19663v1",
+    "title": "From Top-1 to Top-K: A Reproducibility Study and Benchmarking of Counterfactual Explanations for Recommender Systems",
+    "question": "What is the primary motivation behind this paper's systematic reproduction and re-evaluation of counterfactual explanation methods for recommender systems?",
+    "answer": "The primary motivation is to address the heterogeneous evaluation protocols, differing datasets, recommenders, metrics, and explanation formats used by existing Counterfactual Explanation (CE) methods, which hinders reproducibility and fair comparison."
+  },
+  {
+    "paper_id": "2604.19658v1",
+    "title": "Disentangling Damage from Operational Variability: A Label-Free Self-Supervised Representation Learning Framework for Output-Only Structural Damage Identification",
+    "question": "What specific self-supervised regularization method is employed in the proposed framework to disentangle damage from operational variability?",
+    "answer": "The proposed framework employs Variance-Invariance-Covariance Regularization (VICReg) as a self-supervised invariance regularization method."
+  },
+  {
+    "paper_id": "2604.19623v1",
+    "title": "SAGE: Training-Free Semantic Evidence Composition for Edge-Cloud Inference under Hard Uplink Budgets",
+    "question": "What limitation of attention-based importance selection for collaborative inference does SAGE address under hard uplink budgets?",
+    "answer": "SAGE addresses the limitation that selecting transmitted content based solely on attention-based importance is inherently limited under hard budgets, as it fails to consider the complementary nature of different pieces of information and can be outperformed by spatially uniform selection at moderate budgets."
+  },
+  {
+    "paper_id": "2604.19593v1",
+    "title": "RoLegalGEC: Legal Domain Grammatical Error Detection and Correction Dataset for Romanian",
+    "question": "What is the primary contribution of the RoLegalGEC paper regarding Romanian legal text?",
+    "answer": "The primary contribution of the RoLegalGEC paper is the introduction of the first Romanian-language parallel dataset specifically designed for grammatical error detection and correction within the legal domain."
+  },
+  {
+    "paper_id": "2604.19592v1",
+    "title": "An Efficient Black-Box Reduction from Online Learning to Multicalibration, and a New Route to $\u03a6$-Regret Minimization",
+    "question": "According to the paper, what two components are sufficient to achieve high-dimensional multicalibration with respect to a function class H?",
+    "answer": "To achieve high-dimensional multicalibration with respect to a function class H, it suffices to combine any no-regret learner over H with an expected variational inequality (EVI) solver."
+  },
+  {
+    "paper_id": "2604.19569v1",
+    "title": "Lyapunov-Certified Direct Switching Theory for Q-Learning",
+    "question": "How does the paper represent the Bellman maximization error in Q-learning?",
+    "answer": "The paper represents the Bellman maximization error exactly by a stochastic policy."
+  },
+  {
+    "paper_id": "2604.19565v1",
+    "title": "Detecting Hallucinations in SpeechLLMs at Inference Time Using Attention Maps",
+    "question": "What are the four attention-derived metrics proposed in this paper for detecting hallucinations in SpeechLLMs?",
+    "answer": "The four attention-derived metrics proposed are AUDIORATIO, AUDIOCONSISTENCY, AUDIOENTROPY, and TEXTENTROPY."
+  },
+  {
+    "paper_id": "2604.19562v1",
+    "title": "Structure-guided molecular design with contrastive 3D protein-ligand learning",
+    "question": "What are the two main components of the proposed unified framework for structure-guided molecular design?",
+    "answer": "The unified framework consists of an SE(3)-equivariant transformer for contrastive 3D structure encoding of ligands and pockets, and a multimodal Chemical Language Model (MCLM) that integrates these embeddings for autoregressive molecular generation."
+  },
+  {
+    "paper_id": "2604.19560v1",
+    "title": "Separating Geometry from Probability in the Analysis of Generalization",
+    "question": "What is the core limitation of traditional generalization analysis in machine learning that this paper aims to address?",
+    "answer": "Traditional analysis of generalization relies on the assumption that both in-sample and out-of-sample data are independent and identically distributed (i.i.d.) draws from an infinite population, an assumption that cannot be verified in principle."
+  },
+  {
+    "paper_id": "2604.19559v1",
+    "title": "Enhancing Construction Worker Safety in Extreme Heat: A Machine Learning Approach Utilizing Wearable Technology for Predictive Health Analytics",
+    "question": "What specific deep learning models were developed and evaluated in this study for predicting heat stress in construction workers, and which one demonstrated superior performance?",
+    "answer": "The study developed and evaluated a baseline Long Short-Term Memory (LSTM) network and an attention-based LSTM model. The attention-based LSTM model outperformed the baseline, achieving 95.40% testing accuracy."
+  },
+  {
+    "paper_id": "2604.19530v1",
+    "title": "Calibrating Scientific Foundation Models with Inference-Time Stochastic Attention",
+    "question": "How does the proposed Stochastic Attention mechanism modify the standard Transformer architecture to introduce uncertainty?",
+    "answer": "Stochastic Attention modifies the Transformer architecture by replacing the deterministic softmax attention weights with normalized multinomial samples. These samples are controlled by a single concentration parameter, introducing randomness at inference time."
+  },
+  {
+    "paper_id": "2604.19528v1",
+    "title": "Revisiting RaBitQ and TurboQuant: A Symmetric Comparison of Methods, Theory, and Experiments",
+    "question": "What is the primary finding of this technical note regarding the performance comparison between RaBitQ and TurboQuant?",
+    "answer": "The technical note finds that TurboQuant does not consistently outperform RaBitQ in directly comparable settings and often performs worse, contradicting claims of its advantage."
+  },
+  {
+    "paper_id": "2604.19526v1",
+    "title": "Evaluating LLM-Generated Obfuscated XSS Payloads for Machine Learning-Based Detection",
+    "question": "What is the primary challenge addressed by the proposed pipeline for generating obfuscated XSS payloads using LLMs?",
+    "answer": "The primary challenge addressed is ensuring that LLM-generated obfuscated XSS payloads remain behaviorally valid, as existing methods often prioritize syntactic diversity without guaranteeing behavioral equivalence."
+  },
+  {
+    "paper_id": "2604.19518v1",
+    "title": "Accelerating Optimization and Machine Learning through Decentralization",
+    "question": "What is the primary counter-intuitive finding presented in this paper regarding decentralized optimization?",
+    "answer": "The paper demonstrates that decentralization can paradoxically accelerate convergence, outperforming centralized methods in the number of iterations required to reach optimal solutions."
+  },
+  {
+    "paper_id": "2604.19514v1",
+    "title": "When Graph Structure Becomes a Liability: A Critical Re-Evaluation of Graph Neural Networks for Bitcoin Fraud Detection under Temporal Distribution Shift",
+    "question": "What was the key finding when comparing GNNs to feature-only baselines on the Elliptic Bitcoin Dataset under a strictly inductive protocol?",
+    "answer": "Under a strictly inductive protocol, Random Forest on raw features achieved a higher F1 score (0.821) and outperformed all evaluated GNNs, including GraphSAGE (0.689 +/- 0.017), contradicting the widely cited consensus."
+  },
+  {
+    "paper_id": "2604.19485v1",
+    "title": "EVPO: Explained Variance Policy Optimization for Adaptive Critic Utilization in LLM Post-Training",
+    "question": "How does EVPO determine whether to utilize a learned critic for policy optimization in LLM post-training?",
+    "answer": "EVPO determines critic utilization by calculating the explained variance (EV) from a single training batch; a positive EV indicates that the critic should be used, while a negative EV suggests a critic-free approach."
+  },
+  {
+    "paper_id": "2604.19453v1",
+    "title": "ZC-Swish: Stabilizing Deep BN-Free Networks for Edge and Micro-Batch Applications",
+    "question": "What issue do standard activation functions like Swish and ReLU exacerbate in Batch Normalization-free deep networks, according to the paper?",
+    "answer": "Standard activation functions like Swish and ReLU exacerbate instability in BN-free networks due to their non-zero-centered nature, which causes compounding activation mean-shifts as network depth increases."
+  },
+  {
+    "paper_id": "2604.19451v1",
+    "title": "Heterogeneity-Aware Personalized Federated Learning for Industrial Predictive Analytics",
+    "question": "What is the main limitation of traditional federated prognostic models that this paper aims to address, and what is the proposed solution?",
+    "answer": "Traditional federated prognostic models often assume homogeneity in degradation processes across clients, which may not be realistic in industrial settings. This paper proposes a personalized federated prognostic model that accommodates heterogeneous degradation processes by facilitating pairwise collaborations between clients with similar degradation patterns to enhance personalized federated learning."
+  },
+  {
+    "paper_id": "2604.19444v1",
+    "title": "Unsupervised Confidence Calibration for Reasoning LLMs from a Single Generation",
+    "question": "What is the primary limitation of existing methods for confidence calibration in reasoning LLMs that the proposed approach aims to address?",
+    "answer": "Existing calibration methods typically require labels or repeated sampling at inference time, which are often impractical for deployment."
+  },
+  {
+    "paper_id": "2604.19414v1",
+    "title": "CAST: Modeling Semantic-Level Transitions for Complementary-Aware Sequential Recommendation",
+    "question": "What is the core limitation of mainstream sequential recommendation models that CAST aims to address regarding complementary relations?",
+    "answer": "Mainstream sequential recommendation models often mistake spurious correlations, such as those arising from popularity bias, for true complementary relations because they rely on sparse co-purchase statistics and fail to capture fine-grained item semantics."
+  },
+  {
+    "paper_id": "2604.19401v1",
+    "title": "Revisiting Catastrophic Forgetting in Continual Knowledge Graph Embedding",
+    "question": "What is the \"entity interference\" phenomenon that the paper identifies as a significant, overlooked issue in Continual Knowledge Graph Embedding?",
+    "answer": "The paper defines \"entity interference\" as a phenomenon where the embeddings of newly introduced entities can negatively impact previously learned embeddings, leading the model to incorrectly predict new entities in place of previously correct ones."
+  },
+  {
+    "paper_id": "2604.19399v1",
+    "title": "Optimal Routing for Federated Learning over Dynamic Satellite Networks: Tractable or Not?",
+    "question": "What specific communication challenge in Federated Learning does this paper address, particularly in the context of satellite networks?",
+    "answer": "This paper addresses the challenge of optimal routing for Federated Learning (FL) in dynamic satellite networks, where communication between clients and the server is relay-based and requires routing optimization, especially for in-orbit FL scenarios involving multi-hop inter-satellite links."
+  },
+  {
+    "paper_id": "2604.19372v1",
+    "title": "TACENR: Task-Agnostic Contrastive Explanations for Node Representations",
+    "question": "What gap in existing explainability methods for graph representations does TACENR aim to address?",
+    "answer": "TACENR aims to address the gap in existing explainability methods that primarily focus on supervised settings or individual representation dimensions, by providing a local explanation method that identifies attribute, proximity, and structural features contributing to node representations."
+  },
+  {
+    "paper_id": "2604.19368v1",
+    "title": "Mind2Drive: Predicting Driver Intentions from EEG in Real-world On-Road Driving",
+    "question": "What deep learning architecture demonstrated the highest performance in predicting driver intentions from EEG data in the Mind2Drive study, and what were its key performance metrics?",
+    "answer": "The TSCeption architecture achieved the highest average accuracy of 0.907 and a Macro-F1 score of 0.901 in predicting driver intentions from EEG data within the Mind2Drive framework."
+  },
+  {
+    "paper_id": "2604.19357v1",
+    "title": "FairTree: Subgroup Fairness Auditing of Machine Learning Models with Bias-Variance Decomposition",
+    "question": "How does FairTree differ from existing subgroup fairness auditing tools like SliceFinder and SliceLine in its handling of feature types?",
+    "answer": "FairTree directly handles continuous, categorical, and ordinal features without requiring discretization, unlike SliceFinder and related algorithms which may struggle with continuous covariates."
+  },
+  {
+    "paper_id": "2604.19355v1",
+    "title": "LASER: Learning Active Sensing for Continuum Field Reconstruction",
+    "question": "How does LASER formulate the problem of active sensing for continuum field reconstruction?",
+    "answer": "LASER formulates active sensing as a Partially Observable Markov Decision Process (POMDP)."
+  },
+  {
+    "paper_id": "2604.19343v1",
+    "title": "Scalable Memristive-Friendly Reservoir Computing for Time Series Classification",
+    "question": "What novel architecture is proposed in this paper to improve upon the memristive-friendly echo state network (MF-ESN) for scalable parallel computation and deeper model composition?",
+    "answer": "The paper proposes memristive-friendly parallelized reservoirs (MARS), a simplified yet more effective architecture that enables efficient scalable parallel computation and deeper model composition through novel subtractive skip connections."
+  },
+  {
+    "paper_id": "2604.19341v1",
+    "title": "Evaluation-driven Scaling for Scientific Discovery",
+    "question": "What is the name of the framework introduced in the paper for scaling evaluation-driven discovery loops?",
+    "answer": "The paper introduces Simple Test-time Evaluation-driven Scaling (SimpleTES) as a general framework for scaling evaluation-driven discovery loops."
+  },
+  {
+    "paper_id": "2604.19340v1",
+    "title": "Improvements to the post-processing of weather forecasts using machine learning and feature selection",
+    "question": "What machine learning model, when combined with feature selection based on correlation analysis, demonstrated lower RMSE for weather forecast post-processing compared to specific neural network baselines and the JMA's own post-processing product in the experimental setting described?",
+    "answer": "The LightGBM-based models, when incorporating meteorological variables from surrounding grid points and utilizing feature selection based on correlation analysis, achieved lower RMSE than the tested neural network baselines, the raw MSM forecasts, and the JMA post-processing product (MSM Guidanc)."
+  },
+  {
+    "paper_id": "2604.19336v1",
+    "title": "FedSEA: Achieving Benefit of Parallelization in Federated Online Learning",
+    "question": "What is the primary limitation of standard Online Federated Learning (OFL) that FedSEA aims to address regarding parallelization?",
+    "answer": "Standard OFL typically precludes any potential benefits of parallelization due to its assumed adversary model."
+  },
+  {
+    "paper_id": "2604.19335v1",
+    "title": "When Active Learning Falls Short: An Empirical Study on Chemical Reaction Extraction",
+    "question": "What types of strategies were integrated with pretrained transformer-CRF architectures in this study on chemical reaction extraction?",
+    "answer": "This study integrated six uncertainty- and diversity-based strategies with pretrained transformer-CRF architectures."
+  },
+  {
+    "paper_id": "2604.19323v1",
+    "title": "Concept Inconsistency in Dermoscopic Concept Bottleneck Models: A Rough-Set Analysis of the Derm7pt Dataset",
+    "question": "According to the paper's analysis of the Derm7pt dataset, what proportion of unique concept profiles exhibit inconsistency, and what is the resulting theoretical accuracy ceiling for Concept Bottleneck Models?",
+    "answer": "The analysis found that 50 out of 305 unique concept profiles (16.4%) are inconsistent, leading to a theoretical accuracy ceiling of 92.1%."
+  },
+  {
+    "paper_id": "2604.19321v1",
+    "title": "RDP LoRA: Geometry-Driven Identification for Parameter-Efficient Adaptation in Large Language Models",
+    "question": "How does RDP LoRA leverage the Ramer-Douglas-Peucker algorithm to inform parameter-efficient adaptation in LLMs?",
+    "answer": "RDP LoRA models the evolution of hidden states as a geometric trajectory and uses the Ramer-Douglas-Peucker (RDP) algorithm to identify critical breakpoints along this path. These geometric pivots are then used as a direct signal to determine which layers should be adapted."
+  },
+  {
+    "paper_id": "2604.19312v1",
+    "title": "On the Conditioning Consistency Gap in Conditional Neural Processes",
+    "question": "What is the proposed metric for quantifying the inconsistency in Conditional Neural Processes (CNPs), and what is its asymptotic behavior with respect to the context size?",
+    "answer": "The paper proposes the conditioning consistency gap, defined as a KL divergence measuring the change in a CNP's predictions when a point is added to the context versus conditioned upon. For CNPs with bounded encoders and Lipschitz decoders, this gap is shown to be $O(1/n^2)$ in context size $n$."
+  },
+  {
+    "paper_id": "2604.19296v1",
+    "title": "Debiased neural operators for estimating functionals",
+    "question": "What is the primary purpose of the DOPE (debiased neural operator) estimator introduced in this paper?",
+    "answer": "DOPE is a semiparametric estimator designed to estimate scalar target quantities, or functionals, of solution trajectories generated by neural operators, rather than recovering the full solution trajectory itself."
+  },
+  {
+    "paper_id": "2604.19295v1",
+    "title": "TEMPO: Scaling Test-time Training for Large Reasoning Models",
+    "question": "What is the core mechanism proposed by TEMPO to overcome the limitations of existing Test-Time Training (TTT) methods for Large Reasoning Models (LRMs)?",
+    "answer": "TEMPO addresses the limitations of existing TTT methods by interleaving policy refinement on unlabeled questions with periodic critic recalibration on a labeled dataset, formalizing this alternating procedure through the Expectation-Maximization (EM) algorithm."
+  },
+  {
+    "paper_id": "2604.19281v1",
+    "title": "Beyond Semantic Similarity: A Component-Wise Evaluation Framework for Medical Question Answering Systems with Health Equity Implications",
+    "question": "What are the four distinct components that the VB-Score framework evaluates for medical question-answering models?",
+    "answer": "The VB-Score framework evaluates four components: entity recognition, semantic similarity, factual consistency, and structured information completeness."
+  },
+  {
+    "paper_id": "2604.19219v1",
+    "title": "Sherpa.ai Privacy-Preserving Multi-Party Entity Alignment without Intersection Disclosure for Noisy Identifiers",
+    "question": "What is the primary challenge addressed by Sherpa.ai's privacy-preserving entity alignment (PPEA) method in the context of Vertical Federated Learning (VFL)?",
+    "answer": "The primary challenge addressed by Sherpa.ai's PPEA method is to establish a common index of samples across parties for VFL training without revealing which samples are shared between them, a limitation of conventional private set intersection (PSI) which leaks intersection membership."
+  },
+  {
+    "paper_id": "2604.19212v1",
+    "title": "The Logical Expressiveness of Topological Neural Networks",
+    "question": "What fundamental question about topological neural networks (TNNs) does this paper aim to answer regarding their logical expressiveness?",
+    "answer": "This paper aims to answer the fundamental question of what the logical expressiveness of TNNs is, in order to precisely characterize which binary classifiers TNNs can represent."
+  },
+  {
+    "paper_id": "2604.19204v1",
+    "title": "Auditing LLMs for Algorithmic Fairness in Casenote-Augmented Tabular Prediction",
+    "question": "What specific type of algorithmic fairness disparity did the paper audit in the context of LLM-based tabular classification for housing placement prediction?",
+    "answer": "The paper audited multi-class classification error disparities."
+  },
+  {
+    "paper_id": "2604.19186v1",
+    "title": "Inductive Subgraphs as Shortcuts: Causal Disentanglement for Heterophilic Graph Learning",
+    "question": "According to the paper, what role do recurring inductive subgraphs play in the performance degradation of GNNs on heterophilic graphs?",
+    "answer": "The paper posits that recurring inductive subgraphs act as spurious shortcuts, misleading GNNs by reinforcing non-causal correlations in heterophilic graphs."
+  },
+  {
+    "paper_id": "2604.19176v1",
+    "title": "Deep Image Prior for photoacoustic tomography can mitigate limited-view artifacts",
+    "question": "How does the Deep Image Prior (DIP) framework address limited-view artifacts and noise in photoacoustic tomography (PAT) reconstructions, according to this paper?",
+    "answer": "The paper applies the Deep Image Prior (DIP) framework to photoacoustic tomography (PAT) as an unsupervised reconstruction approach to mitigate limited-view artifacts and noise. It also utilizes fast forward and adjoint algorithms for circular measurement geometries, and employs initialization via a fast inverse and total variation (TV) regularization to further suppress noise and mitigate overfitting."
+  },
+  {
+    "paper_id": "2604.19171v1",
+    "title": "FOCAL-Attention for Heterogeneous Multi-Label Prediction",
+    "question": "What are the two main challenges in multi-label node classification on heterogeneous graphs that FOCAL-Attention aims to address?",
+    "answer": "FOCAL-Attention addresses the challenges of structural heterogeneity and the need to learn shared representations across multiple labels in heterogeneous graphs for multi-label node classification."
+  },
+  {
+    "paper_id": "2604.19167v1",
+    "title": "LBLLM: Lightweight Binarization of Large Language Models via Three-Stage Distillation",
+    "question": "What is the three-stage distillation strategy employed by LBLLM for lightweight binarization of LLMs?",
+    "answer": "LBLLM employs a three-stage distillation strategy: first, it initializes a high-quality quantized model using Post-Training Quantization (PTQ); second, it quantizes binarized weights, group-wise bitmaps, and quantization parameters through layer-wise distillation while maintaining full precision for activations; and third, it trains learnable activation quantization factors to dynamically quantize activations to 4 bits."
+  },
+  {
+    "paper_id": "2604.19165v1",
+    "title": "Analytical Extraction of Conditional Sobol' Indices via Basis Decomposition of Polynomial Chaos Expansions",
+    "question": "How does this paper propose to analytically extract conditional Sobol' indices from a pre-trained Polynomial Chaos Expansion (PCE) model?",
+    "answer": "The paper demonstrates that conditional Sobol' indices are inherently embedded within the basis functions of a pre-trained global PCE model. By utilizing the tensor-product property of PCE bases, the global expansion is reformulated into analytical coefficient fields that are dependent on the conditioning variables, allowing for their extraction."
+  },
+  {
+    "paper_id": "2604.19159v1",
+    "title": "MSDS: Deep Structural Similarity with Multiscale Representation",
+    "question": "How does MSDS address the limitation of single-scale analysis in deep-feature-based perceptual similarity models?",
+    "answer": "MSDS addresses the limitation of single-scale analysis by computing DeepSSIM independently across different pyramid levels and then fusing the resulting scores, thereby incorporating a multiscale representation for structural similarity."
+  },
+  {
+    "paper_id": "2604.19157v1",
+    "title": "SAW-INT4: System-Aware 4-Bit KV-Cache Quantization for Real-World LLM Serving",
+    "question": "What specific 4-bit KV-cache quantization method does SAW-INT4 propose as the most effective for real-world LLM serving, considering practical system constraints?",
+    "answer": "SAW-INT4 proposes token-wise INT4 quantization with block-diagonal Hadamard rotation as the minimal and most effective 4-bit KV-cache quantization method that remains viable under practical serving constraints like paged memory layouts, regular memory access, and fused attention execution."
+  },
+  {
+    "paper_id": "2604.19147v1",
+    "title": "Nexusformer: Nonlinear Attention Expansion for Stable and Inheritable Transformer Scaling",
+    "question": "What specific component of the standard Transformer attention mechanism does Nexusformer modify to enable stable and inheritable scaling, and what does it replace it with?",
+    "answer": "Nexusformer modifies the linear Q/K/V projections in the standard Transformer attention mechanism, replacing them with a Nexus-Rank layer, which is a three-stage nonlinear mapping."
+  },
+  {
+    "paper_id": "2604.19146v1",
+    "title": "RL-ABC: Reinforcement Learning for Accelerator Beamline Control",
+    "question": "How does RLABC facilitate the application of reinforcement learning to accelerator beamline control using existing simulation tools?",
+    "answer": "RLABC automatically transforms standard Elegant beamline configurations into reinforcement learning environments by integrating with Elegant via SDDS-based interfaces, allowing researchers to apply RL algorithms to beamline optimization with minimal RL-specific development."
+  },
+  {
+    "paper_id": "2604.19117v1",
+    "title": "LLMs Know They're Wrong and Agree Anyway: The Shared Sycophancy-Lying Circuit",
+    "question": "What specific circuit mechanism does the paper identify as responsible for sycophantic behavior in LLMs, and what is the evidence for this claim?",
+    "answer": "The paper identifies a small set of attention heads as carrying a \"this statement is wrong\" signal, which controls sycophantic behavior. Evidence for this includes observing that silencing these specific heads significantly reduces sycophancy while leaving factual accuracy unaffected, and that edge-level path patching confirms these heads' connections drive sycophancy, factual lying, and instructed lying."
+  },
+  {
+    "paper_id": "2604.19108v1",
+    "title": "Robust Continual Unlearning against Knowledge Erosion and Forgetting Reversal",
+    "question": "What are the two critical phenomena identified by the paper when evaluating unlearning algorithms in a repeated unlearning scenario?",
+    "answer": "The paper identifies two critical phenomena: Knowledge Erosion, where accuracy on retain data progressively degrades over unlearning phases, and Forgetting Reversal, where previously forgotten samples are relearned."
+  },
+  {
+    "paper_id": "2604.19106v1",
+    "title": "Design Rules for Extreme-Edge Scientific Computing on AI Engines",
+    "question": "What is the primary challenge with scaling spatial dataflow implementations for extreme-edge scientific applications when dealing with larger machine learning models?",
+    "answer": "Spatial dataflow implementations fail to scale to larger models due to inherent resource scaling limitations."
+  },
+  {
+    "paper_id": "2604.19098v1",
+    "title": "SAHM: A Benchmark for Arabic Financial and Shari'ah-Compliant Reasoning",
+    "question": "What is the primary contribution of the SAHM benchmark described in the paper?",
+    "answer": "The primary contribution of the SAHM benchmark is to provide a document-grounded dataset and instruction-tuning resource for Arabic financial NLP and Shari'ah-compliant reasoning, addressing the comparative under-exploration of this domain in English financial NLP."
+  },
+  {
+    "paper_id": "2604.19091v1",
+    "title": "Fast estimation of Gaussian mixture components via centering and singular value thresholding",
+    "question": "What are the key steps involved in the proposed estimator for determining the number of Gaussian mixture components?",
+    "answer": "The proposed estimator involves three main steps: centering the data, computing the singular values of the centered matrix, and counting the singular values that exceed a specified threshold."
+  },
+  {
+    "paper_id": "2604.19072v1",
+    "title": "S2MAM: Semi-supervised Meta Additive Model for Robust Estimation and Variable Selection",
+    "question": "What is the primary limitation of traditional Laplacian regularization in semi-supervised learning that S2MAM aims to address?",
+    "answer": "Traditional Laplacian regularization, used in semi-supervised learning with manifold regularization, relies on a graph Laplacian matrix that is heavily dependent on a prespecified similarity metric, which can lead to inappropriate penalties when dealing with redundant or noisy input variables."
+  },
+  {
+    "paper_id": "2604.19070v1",
+    "title": "TRN-R1-Zero: Text-rich Network Reasoning via LLMs with Reinforcement Learning Only",
+    "question": "What is the core objective of the TRN-R1-Zero framework, and how does it achieve this without task-specific supervision?",
+    "answer": "TRN-R1-Zero is a post-training framework designed for text-rich network reasoning that is trained solely via reinforcement learning. It directly optimizes base LLMs using a Neighbour-aware Group Relative Policy Optimisation objective, which dynamically adjusts rewards based on a novel margin gain metric to guide the model towards incorporating neighbouring signals."
+  },
+  {
+    "paper_id": "2604.19066v1",
+    "title": "Age-Dependent Heterogeneity in the Association Between Physical Activity and Mental Distress: A Causal Machine Learning Analysis of 3.2 Million U.S. Adults",
+    "question": "What specific dataset and time frame were utilized in this study to analyze the association between physical activity and mental distress across different age groups?",
+    "answer": "The study utilized pooled data from ten consecutive annual waves of the U.S. Behavioral Risk Factor Surveillance System, spanning from 2015 to 2024."
+  },
+  {
+    "paper_id": "2604.19033v1",
+    "title": "Intentional Updates for Streaming Reinforcement Learning",
+    "question": "What is the core idea behind \"intentional updates\" as proposed in this paper for streaming reinforcement learning?",
+    "answer": "The core idea of intentional updates is to first specify the desired outcome of an update and then determine the step size that will approximately achieve that outcome, rather than choosing a step size in parameter units which leads to unpredictable changes in function output."
+  },
+  {
+    "paper_id": "2604.19028v1",
+    "title": "Learning Posterior Predictive Distributions for Node Classification from Synthetic Graph Priors",
+    "question": "What fundamental limitation of Graph Neural Networks (GNNs) does NodePFN aim to address, inspired by the success of large language models?",
+    "answer": "NodePFN aims to address the fundamental limitation of GNNs requiring separate training for each new graph, which prevents universal generalization across diverse graph datasets. This is inspired by the in-context learning capabilities of large language models."
+  },
+  {
+    "paper_id": "2604.19024v1",
+    "title": "Policy Gradient Primal-Dual Method for Safe Reinforcement Learning from Human Feedback",
+    "question": "How does this paper reformulate Safe RLHF compared to existing approaches that typically rely on fixed horizon reward models?",
+    "answer": "This paper reformulates Safe RLHF as an infinite horizon discounted Constrained Markov Decision Process (CMDP), moving beyond the fixed horizon reward model fitting used in existing approaches."
+  },
+  {
+    "paper_id": "2604.19021v1",
+    "title": "FG$^2$-GDN: Enhancing Long-Context Gated Delta Networks with Doubly Fine-Grained Control",
+    "question": "What is the key innovation of FG$^2$-GDN compared to previous Gated Delta Networks like KDA?",
+    "answer": "FG$^2$-GDN replaces the scalar learning rate $\\beta_t$ in the delta update with a channel-wise vector, enabling dimension-specific adaptation, analogous to the transition from SGD to adaptive optimizers like AdaGrad and Adam."
+  },
+  {
+    "paper_id": "2604.19018v1",
+    "title": "Local Linearity of LLMs Enables Activation Steering via Model-Based Linear Optimal Control",
+    "question": "How does this paper propose to improve upon existing inference-time LLM alignment methods like activation steering, which are often suboptimal and open-loop?",
+    "answer": "The paper proposes to improve upon existing methods by modeling LLM inference as a linear time-varying dynamical system, exploiting the empirically observed local linearity of LLMs, and adapting the classical linear quadratic regulator to compute feedback controllers using layer-wise Jacobians for more effective steering."
+  },
+  {
+    "paper_id": "2604.19015v1",
+    "title": "FedProxy: Federated Fine-Tuning of LLMs via Proxy SLMs and Heterogeneity-Aware Fusion",
+    "question": "How does FedProxy address the performance bottleneck observed in existing federated LLM fine-tuning methods like Offsite-Tuning?",
+    "answer": "FedProxy replaces lightweight adapters with a unified, powerful Proxy Small Language Model (SLM), compressed from the proprietary LLM, to serve as a high-fidelity surrogate for collaborative fine-tuning, thereby bridging the performance gap compared to centralized training."
+  },
+  {
+    "paper_id": "2604.19011v1",
+    "title": "Accelerating trajectory optimization with Sobolev-trained diffusion policies",
+    "question": "What is the counterintuitive challenge encountered when using diffusion-based policies to warm-start trajectory optimization, given that TO demonstrations are locally optimal?",
+    "answer": "The counterintuitive challenge is that small, non-optimal deviations during policy rollout can lead the policy into situations not present in the locally optimal TO demonstrations, potentially hindering its effectiveness."
+  },
+  {
+    "paper_id": "2604.19009v1",
+    "title": "Guiding Distribution Matching Distillation with Gradient-Based Reinforcement Learning",
+    "question": "How does GDMD differ from previous approaches that integrate RL into diffusion distillation, particularly concerning the reward signal?",
+    "answer": "GDMD redefines the reward mechanism by prioritizing distillation gradients over raw pixel outputs as the primary signal for optimization, unlike naive fusions that rely on suboptimal raw sample evaluation which creates conflicts with the distillation trajectory and produces unreliable rewards."
+  },
+  {
+    "paper_id": "2604.19000v1",
+    "title": "Decompose, Structure, and Repair: A Neuro-Symbolic Framework for Autoformalization via Operator Trees",
+    "question": "How does the proposed Decompose, Structure, and Repair (DSR) framework differ from prior end-to-end LLM approaches in statement autoformalization?",
+    "answer": "Unlike prior end-to-end LLM approaches that treat formal code as flat sequences, DSR introduces a modular pipeline that decomposes statements into logical components, maps them to structured operator trees, and uses these trees to localize and repair errors via sub-tree refinement, thereby leveraging the inherent hierarchical logic of mathematical statements."
+  },
+  {
+    "paper_id": "2604.18995v1",
+    "title": "$R^2$-dLLM: Accelerating Diffusion Large Language Models via Spatio-Temporal Redundancy Reduction",
+    "question": "What are the two main types of redundancy identified in the dLLM decoding process that $R^2$-dLLM aims to reduce?",
+    "answer": "The two main types of redundancy identified are spatial redundancy, caused by confidence clusters and positional ambiguity, and temporal redundancy, caused by repeatedly remasking predictions that have already stabilized."
+  },
+  {
+    "paper_id": "2604.18978v1",
+    "title": "Low-Rank Adaptation for Critic Learning in Off-Policy Reinforcement Learning",
+    "question": "How does the paper propose to address the overfitting and instability issues associated with scaling critic capacity in off-policy reinforcement learning?",
+    "answer": "The paper proposes leveraging Low-Rank Adaptation (LoRA) as a structural-sparsity regularizer for off-policy critics by freezing randomly initialized base matrices and optimizing only low-rank adapters, thereby constraining critic updates to a low-dimensional subspace."
+  },
+  {
+    "paper_id": "2604.18973v1",
+    "title": "Ground-Level Near Real-Time Modeling for PM2.5 Pollution Prediction",
+    "question": "What is a key limitation of existing PM2.5 prediction models that this paper aims to overcome?",
+    "answer": "Existing models often rely on input data sources that are not regularly updated and utilize predefined grids, which this paper's deep-learning approach seeks to address through interpolation."
+  },
+  {
+    "paper_id": "2604.18972v1",
+    "title": "Beyond Bellman: High-Order Generator Regression for Continuous-Time Policy Evaluation",
+    "question": "What is the primary limitation of the standard Bellman baseline in continuous-time policy evaluation, and how does this paper propose to overcome it?",
+    "answer": "The standard Bellman baseline in continuous-time policy evaluation is only first-order in the grid width. This paper proposes to overcome this limitation by estimating the time-dependent generator from multi-step transitions using moment-matching coefficients that cancel lower-order truncation terms, and then combining this surrogate with backward regression."
+  },
+  {
+    "paper_id": "2604.18970v1",
+    "title": "Mechanistic Anomaly Detection via Functional Attribution",
+    "question": "How does the proposed Mechanistic Anomaly Detection (MAD) approach differ from previous methods in its core formulation?",
+    "answer": "The paper reframes Mechanistic Anomaly Detection (MAD) as a functional attribution problem, specifically asking to what extent samples from a trusted set can explain the model's output, where a failure in attribution signals anomalous behavior. This contrasts with prior methods that relied on latent space analysis or were architecture-specific."
+  },
+  {
+    "paper_id": "2604.18966v1",
+    "title": "Self-Improving Tabular Language Models via Iterative Group Alignment",
+    "question": "What is the core mechanism proposed by TabGRAA to enable self-improvement in tabular language models?",
+    "answer": "TabGRAA enables self-improvement through an iterative process that utilizes an automated quality signal, such as two-sample distinguishability, to provide feedback for alignment."
+  },
+  {
+    "paper_id": "2604.18963v1",
+    "title": "Distillation Traps and Guards: A Calibration Knob for LLM Distillability",
+    "question": "What are the three fundamental distillation traps identified in the paper that can distort training signals during knowledge distillation?",
+    "answer": "The paper identifies three fundamental distillation traps: tail noise, off-policy instability, and the teacher-student gap."
+  },
+  {
+    "paper_id": "2604.18953v1",
+    "title": "FlowForge: A Staged Local Rollout Engine for Flow-Field Prediction",
+    "question": "How does FlowForge's staged local rollout engine differ from traditional deep learning surrogates for CFD flow-field prediction in its approach to generating future flow fields?",
+    "answer": "Unlike traditional methods that produce the next frame in a single global pass, FlowForge employs a staged local rollout engine. It compiles a locality-preserving update schedule and executes it by rewriting spatial sites stage by stage, with each update conditioning only on bounded local context from earlier stages."
+  },
+  {
+    "paper_id": "2604.18943v1",
+    "title": "Personalized Benchmarking: Evaluating LLMs by Individual Preferences",
+    "question": "What is the primary limitation of current LLM benchmarks that this paper aims to address?",
+    "answer": "Current LLM benchmarks average user preferences to compute aggregate ratings, which overlooks individual user preferences when establishing model rankings."
+  },
+  {
+    "paper_id": "2604.18939v1",
+    "title": "TabEmb: Joint Semantic-Structure Embedding for Table Annotation",
+    "question": "What are the primary limitations of existing table annotation models that TabEmb aims to address?",
+    "answer": "Existing table annotation models, which linearize 2D tables into 1D sequences for PLMs like BERT, suffer from limited semantic quality, weaker generalization to unseen values, and degraded structural modeling due to flattening and context-length constraints. TabEmb is proposed to directly tackle these issues."
+  },
+  {
+    "paper_id": "2604.18936v1",
+    "title": "Fine-Tuning Small Reasoning Models for Quantum Field Theory",
+    "question": "What was the primary challenge addressed by the data generation pipeline developed in this paper for fine-tuning LLMs on Quantum Field Theory?",
+    "answer": "The primary challenge addressed was the scarcity of open-source, verifiable training data required to train LLMs for domain-specific physics reasoning."
+  },
+  {
+    "paper_id": "2604.18918v1",
+    "title": "From Particles to Perils: SVGD-Based Hazardous Scenario Generation for Autonomous Driving Systems Testing",
+    "question": "How does the proposed PtoP framework leverage Stein Variational Gradient Descent (SVGD) to generate diverse and failure-inducing initial conditions for autonomous driving systems testing?",
+    "answer": "PtoP utilizes SVGD to generate diverse, failure-inducing initial conditions by balancing attraction toward high-risk regions with repulsion among particles, which results in risk-seeking yet well-distributed seeds across multiple failure modes."
+  },
+  {
+    "paper_id": "2604.18914v1",
+    "title": "MORPHOGEN: A Multilingual Benchmark for Evaluating Gender-Aware Morphological Generation",
+    "question": "What is the primary task required of language models within the MORPHOGEN benchmark, and what languages does it cover?",
+    "answer": "The primary task within the MORPHOGEN benchmark is GENFORM, which requires models to rewrite a first-person sentence in the opposite gender while preserving its meaning and structure. The benchmark covers three languages: French, Arabic, and Hindi."
+  },
+  {
+    "paper_id": "2604.18912v1",
+    "title": "Collaborative Contextual Bayesian Optimization",
+    "question": "What is the primary challenge that Collaborative Contextual Bayesian Optimization (CCBO) aims to address compared to standard Contextual Bayesian Optimization (CBO)?",
+    "answer": "CCBO addresses the challenge of optimizing tasks across multiple, potentially heterogeneous but related clients, where collaboration can significantly improve learning efficiency, a scenario not inherently handled by standard CBO."
+  },
+  {
+    "paper_id": "2604.18907v1",
+    "title": "Gradient-Based Program Synthesis with Neurally Interpreted Languages",
+    "question": "What specific architecture is used in this paper to bridge the gap between symbolic and neural program induction, and what is its key component?",
+    "answer": "The paper uses an instance of a Latent Adaptation Network architecture named Neural Language Interpreter (NLI), which features a novel differentiable neural executor."
+  },
+  {
+    "paper_id": "2604.18901v1",
+    "title": "Harmful Intent as a Geometrically Recoverable Feature of LLM Residual Streams",
+    "question": "What geometric properties of LLM residual streams does the paper identify as recoverable features of harmful intent?",
+    "answer": "The paper identifies harmful intent as geometrically recoverable from LLM residual streams, specifically as a linear direction in most layers and as an angular deviation in layers where projection methods are less effective."
+  },
+  {
+    "paper_id": "2604.18897v1",
+    "title": "Less Is More: Cognitive Load and the Single-Prompt Ceiling in LLM Mathematical Reasoning",
+    "question": "What was the primary finding regarding prompt engineering for LLM mathematical reasoning in the SAIR Equational Theories Stage 1 competition?",
+    "answer": "The primary finding was a single-prompt ceiling, where balanced hard accuracy plateaued in an empirical saturation region of approximately 60-79% for gpt-oss-120b, despite extensive prompt engineering efforts."
+  },
+  {
+    "paper_id": "2604.18889v1",
+    "title": "AC-SINDy: Compositional Sparse Identification of Nonlinear Dynamics",
+    "question": "How does AC-SINDy differ from the original SINDy framework in its approach to generating nonlinear features?",
+    "answer": "AC-SINDy replaces explicit feature libraries with a structured representation based on arithmetic circuits, constructing nonlinear features through compositions of linear functions and multiplicative interactions, rather than enumerating candidate basis functions."
+  }
+]
