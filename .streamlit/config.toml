@@ -1,0 +1,5 @@
+[server]
+# Streamlit's source watcher introspects lazy transformers modules. Some of
+# those optional image processors import torchvision, which this text-focused
+# app does not need, causing repeated traceback spam during startup.
+fileWatcherType = "none"

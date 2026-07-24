@@ -1,5 +1,0 @@
-model_key,chunk_size,latency_ms,qa_source,Answer Relevance,Faithfulness,Context Precision
-MiniLM,512,1100.45,manual,0.6948,0.9663,0.988
-MPNet,512,1206.98,manual,0.7292,0.9802,0.99
-BGE,512,1185.07,manual,0.9123,0.9862,1.0
-BM25,512,1077.28,manual,0.1416,0.9879,1.0

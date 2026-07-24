@@ -1,106 +1,154 @@
 """
-collector.py – Download ML papers from arXiv using the arXiv API.
+collector.py – Download arXiv papers and save PDFs + metadata.
 
-Usage:
-    python3 collector.py
+Fixes:
+  - download_pdf() removed in arxiv>=2.x → use urllib directly from pdf_url
+  - 429 rate limiting → smaller page size, longer delays, resume-safe
 """
-
-import time
 import json
 import logging
+import re
+import time
+import urllib.request
 from pathlib import Path
 
 import arxiv
 
 from rag import config
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger(__name__)
 
+_ID_RE = re.compile(r"(\d{4}\.\d{4,5})")
 
-# ──────────────────────────────────────────────────────────────────────────────
+
+def _extract_id(entry_id: str) -> str:
+    """Extract bare paper ID from entry_id URL, e.g. 'http://arxiv.org/abs/2106.09685v1' → '2106.09685'"""
+    m = _ID_RE.search(entry_id)
+    return m.group(1) if m else entry_id.split("/")[-1].split("v")[0]
+
+
+def _download_pdf(pdf_url: str, dest: Path, retries: int = 3) -> bool:
+    """Download a PDF via urllib (works with all arxiv library versions)."""
+    for attempt in range(1, retries + 1):
+        try:
+            req = urllib.request.Request(
+                pdf_url,
+                headers={"User-Agent": "arXiv-Agent/1.0 (academic research tool)"},
+            )
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                dest.write_bytes(resp.read())
+            return True
+        except Exception as exc:
+            log.warning("PDF download attempt %d/%d failed for %s: %s", attempt, retries, pdf_url, exc)
+            if attempt < retries:
+                time.sleep(5 * attempt)
+    return False
+
+
 def download_papers(
     category: str = config.ARXIV_CATEGORY,
-    num_papers: int = config.NUM_PAPERS,
-    output_dir: Path = config.DATA_DIR,
+    n: int = config.NUM_PAPERS,
 ) -> list[dict]:
     """
-    Query arXiv for recent cs.LG papers, download their PDFs,
-    and save metadata as a JSON file.
-
-    Returns a list of metadata dicts for successfully downloaded papers.
+    Download up to n papers from arXiv for the given category.
+    Resume-safe: skips papers whose PDFs already exist.
+    Returns list of metadata dicts.
     """
-    output_dir.mkdir(parents=True, exist_ok=True)
-    metadata_path = output_dir / "metadata.json"
+    meta_path = config.DATA_DIR / "metadata.json"
 
-    # ── Resume from existing metadata ────────────────────────────────────────
-    existing_meta: list[dict] = []
-    existing_ids: set[str] = set()
-    if metadata_path.exists():
-        with open(metadata_path) as f:
-            existing_meta = json.load(f)
-        existing_ids = {p["paper_id"] for p in existing_meta}
-        log.info("Found %d already-downloaded papers.", len(existing_meta))
-        if len(existing_meta) >= num_papers:
-            log.info("Target already reached – skipping download.")
-            return existing_meta
+    # Load existing metadata
+    existing: dict[str, dict] = {}
+    if meta_path.exists():
+        with open(meta_path) as f:
+            for p in json.load(f):
+                existing[p["paper_id"]] = p
+        log.info("Found %d existing papers.", len(existing))
+        print(f"  Resuming — {len(existing)} papers already downloaded.")
 
-    # ── Build arXiv query ────────────────────────────────────────────────────
-    client = arxiv.Client(page_size=50, delay_seconds=3, num_retries=5)
+    if len(existing) >= n:
+        print(f"  Already have {len(existing)} papers (target: {n}). Nothing to do.")
+        return list(existing.values())
+
+    needed = n - len(existing)
+    print(f"  Need to download {needed} more papers…")
+
+    # Use smaller page size to avoid 429
+    client = arxiv.Client(
+        page_size=50,
+        delay_seconds=5.0,   # polite — arXiv asks for 3s minimum
+        num_retries=5,
+    )
     search = arxiv.Search(
         query=f"cat:{category}",
-        max_results=num_papers * 2,          # request extra to account for failures
+        max_results=n * 2,   # fetch extra to account for skips
         sort_by=arxiv.SortCriterion.SubmittedDate,
-        sort_order=arxiv.SortOrder.Descending,
     )
 
-    collected: list[dict] = list(existing_meta)
-    need = num_papers - len(existing_meta)
+    new_count = 0
+    skipped   = 0
 
-    log.info("Querying arXiv for %s papers (need %d more)…", category, need)
+    try:
+        for paper in client.results(search):
+            if new_count >= needed:
+                break
 
-    for result in client.results(search):
-        if len(collected) >= num_papers:
-            break
+            pid = _extract_id(paper.entry_id)
 
-        paper_id = result.entry_id.split("/")[-1]
-        if paper_id in existing_ids:
-            continue
-
-        pdf_path = output_dir / f"{paper_id}.pdf"
-
-        # Skip if PDF already present on disk but not in metadata
-        if not pdf_path.exists():
-            try:
-                log.info("[%d/%d] Downloading %s – %s",
-                         len(collected) + 1, num_papers, paper_id, result.title[:60])
-                result.download_pdf(dirpath=str(output_dir), filename=f"{paper_id}.pdf")
-                time.sleep(1)          # be polite to arXiv
-            except Exception as exc:
-                log.warning("  Failed to download %s: %s", paper_id, exc)
+            if pid in existing:
+                skipped += 1
                 continue
 
-        meta = {
-            "paper_id":   paper_id,
-            "title":      result.title,
-            "authors":    [a.name for a in result.authors],
-            "abstract":   result.summary,
-            "published":  str(result.published),
-            "categories": result.categories,
-            "pdf_path":   str(pdf_path),
-        }
-        collected.append(meta)
-        existing_ids.add(paper_id)
+            pdf_path = config.DATA_DIR / f"{pid.replace('/', '_')}v1.pdf"
 
-        # Save incrementally so progress is not lost on interruption
-        with open(metadata_path, "w") as f:
-            json.dump(collected, f, indent=2)
+            # Download PDF using urllib (compatible with all arxiv lib versions)
+            pdf_url = getattr(paper, "pdf_url", None) or f"https://arxiv.org/pdf/{pid}v1"
+            success = _download_pdf(pdf_url, pdf_path)
 
-    log.info("Download complete: %d papers saved to %s", len(collected), output_dir)
-    return collected
+            if not success:
+                log.warning("Skipping %s — PDF download failed.", pid)
+                continue
+
+            authors = []
+            for a in paper.authors:
+                name = getattr(a, "name", str(a))
+                authors.append(name)
+
+            existing[pid] = {
+                "paper_id":  pid,
+                "title":     paper.title,
+                "authors":   authors,
+                "abstract":  paper.summary.replace("\n", " "),
+                "published": paper.published.isoformat(),
+                "pdf_path":  str(pdf_path),
+                "url":       paper.entry_id,
+            }
+            new_count += 1
+
+            # Save after every paper (resume-safe)
+            _save_metadata(existing, meta_path)
+
+            print(f"  [{new_count}/{needed}] {paper.title[:65]}…")
+
+            # Polite delay between downloads
+            time.sleep(3.0)
+
+    except arxiv.HTTPError as exc:
+        log.error("arXiv API error: %s", exc)
+        print(f"\n  ⚠ arXiv rate-limited ({exc}). Saved {new_count} papers so far.")
+        print("  Wait a few minutes then re-run — it will resume where it left off.")
+
+    papers = list(existing.values())
+    _save_metadata(existing, meta_path)
+    print(f"\n  ✅ Done. {len(papers)} total papers saved to {meta_path}")
+    return papers
 
 
-# ──────────────────────────────────────────────────────────────────────────────
+def _save_metadata(existing: dict, path: Path) -> None:
+    with open(path, "w") as f:
+        json.dump(list(existing.values()), f, indent=2)
+
+
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     papers = download_papers()
-    print(f"\n✅  Downloaded {len(papers)} papers to '{config.DATA_DIR}'")
+    print(f"Total: {len(papers)} papers.")

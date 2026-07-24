@@ -1,13 +1,14 @@
 """
-main.py – CLI for the arXiv ReAct Agent.
+main.py – CLI for the arXiv Agent.
 
 Usage:
-    python main.py                         # interactive loop (BGE, top_k=5)
-    python main.py --query "What is LoRA?" # single query and exit
-    python main.py --list                  # list all papers in corpus
-    python main.py --notes                 # show saved research notes
+    python main.py                          # interactive Q&A
+    python main.py --query "What is LoRA?" # single query
+    python main.py --review "Continual Learning" --format APA --themes 4
+    python main.py --list                   # list corpus papers
+    python main.py --notes                  # show saved research notes
+    python main.py --verbose                # show full scratchpad
 """
-
 import argparse
 import json
 import logging
@@ -18,36 +19,48 @@ from rag import config
 from rag.processing.chunker import process_papers, save_chunks, load_chunks
 from rag.retrieval.dense import Retriever
 from rag.retrieval.bm25 import BM25Retriever
-from rag.agent import ReActAgent, ConversationMemory, ResearchMemory
+from rag.retrieval.embeddings import EmbeddingModel
+from rag.sources.session_index import SessionIndex
+from rag.sources.source_router import SourceRouter
+from rag.agent import (
+    ReActAgent, LiteratureAgent,
+    ConversationMemory, ResearchMemory,
+)
 
 logging.basicConfig(level=logging.WARNING)
+log = logging.getLogger(__name__)
 
 BANNER = """
-╔══════════════════════════════════════════════════════════════╗
-║   arXiv ReAct Agent — ML Research Assistant                 ║
-║   BGE · Multi-hop · Self-critique · Conversation Memory     ║
-╚══════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════╗
+║  arXiv Agent — ML Research Assistant                            ║
+║  ReAct · Literature Review · BGE · Multi-Source · Gemini 2.5   ║
+╚══════════════════════════════════════════════════════════════════╝
 """
 
 
 def parse_args():
-    p = argparse.ArgumentParser(description="arXiv ReAct Agent CLI")
-    p.add_argument("--query",  type=str, default=None, help="Single query (non-interactive)")
-    p.add_argument("--list",   action="store_true",    help="List all papers in corpus")
-    p.add_argument("--notes",  action="store_true",    help="Show saved research notes")
-    p.add_argument("--top_k",  type=int, default=config.DEFAULT_TOP_K)
-    p.add_argument("--verbose", action="store_true",   help="Show full scratchpad")
+    p = argparse.ArgumentParser(description="arXiv Agent CLI")
+    p.add_argument("--query",   type=str,  default=None, help="Single Q&A query")
+    p.add_argument("--review",  type=str,  default=None, help="Generate a literature review on this topic")
+    p.add_argument("--format",  type=str,  default="APA", choices=config.CITATION_FORMATS, help="Citation format")
+    p.add_argument("--themes",  type=int,  default=4,    help="Number of themes for literature review")
+    p.add_argument("--live",    action="store_true",     help="Fetch live arXiv papers during review")
+    p.add_argument("--list",    action="store_true",     help="List corpus papers")
+    p.add_argument("--notes",   action="store_true",     help="Show research notes")
+    p.add_argument("--verbose", action="store_true",     help="Show full agent scratchpad")
+    p.add_argument("--output",  type=str,  default=None, help="Save literature review to file")
     return p.parse_args()
 
 
 def load_corpus() -> list:
     cache = config.DATA_DIR / f"chunks_{config.DEFAULT_CHUNK}.json"
     if cache.exists():
-        print(f"  Loading chunks from cache…")
+        print("  Loading chunks from cache…")
         return load_chunks(cache)
     meta = config.DATA_DIR / "metadata.json"
     if not meta.exists():
-        print("  No corpus found. Run the data collection script first.")
+        print("  No corpus found. Download papers first:")
+        print("  python -c \"from rag.data.collector import download_papers; download_papers()\"")
         sys.exit(1)
     with open(meta) as f:
         papers = json.load(f)
@@ -60,72 +73,101 @@ def load_corpus() -> list:
 def list_papers():
     meta = config.DATA_DIR / "metadata.json"
     if not meta.exists():
-        print("No papers. Run data collection first.")
+        print("No corpus. Download papers first.")
         return
     with open(meta) as f:
         papers = json.load(f)
-    print(f"\n📚  {len(papers)} papers in corpus:\n")
+    print(f"\n📚  {len(papers)} papers:\n")
     for i, p in enumerate(papers, 1):
         print(f"  {i:3d}. {p['title']}")
         print(f"       {p['paper_id']}  |  {p['published'][:10]}")
 
 
-def print_step(i: int, step, verbose: bool = False):
-    action_fmt = {
-        "search_corpus":  "\033[94m",   # blue
-        "keyword_search": "\033[96m",   # cyan
-        "fetch_arxiv":    "\033[93m",   # yellow
-        "summarize_paper":"\033[95m",   # magenta
-        "compare_papers": "\033[95m",
-        "finish":         "\033[92m",   # green
-    }
-    reset = "\033[0m"
-    color = action_fmt.get(step.action, "\033[97m")
+def build_system(chunks):
+    print(f"\nBuilding BGE retriever…")
+    dense = Retriever.build(
+        chunks=chunks,
+        chunk_size=config.DEFAULT_CHUNK,
+        index_dir=config.RESULTS_DIR / "indices",
+    )
+    print("  Building BM25 index…")
+    bm25 = BM25Retriever(chunks)
+    print("  Initialising session index…")
+    emb_model   = EmbeddingModel()
+    session_idx = SessionIndex(emb_model)
+    router      = SourceRouter(dense, session_idx)
+    print("  Ready.\n")
+    return dense, bm25, session_idx, router
 
+
+STEP_COLORS = {
+    "search_corpus":   "\033[94m",
+    "keyword_search":  "\033[96m",
+    "fetch_arxiv":     "\033[93m",
+    "summarize_paper": "\033[95m",
+    "compare_papers":  "\033[95m",
+    "finish":          "\033[92m",
+}
+RESET = "\033[0m"
+
+
+def print_step(i, step, verbose):
+    color = STEP_COLORS.get(step.action, "\033[97m")
     print(f"\n  Step {i}")
     print(f"  💭 {step.thought[:120]}")
-    print(f"  {color}⚡ {step.action}{reset}({step.action_input[:80]}{'…' if len(step.action_input)>80 else ''})")
+    print(f"  {color}⚡ {step.action}{RESET}({step.action_input[:80]}{'…' if len(step.action_input)>80 else ''})")
     if verbose and step.observation:
-        print(f"  📋 {step.observation[:300]}{'…' if len(step.observation)>300 else ''}")
+        print(f"  📋 {step.observation[:400]}{'…' if len(step.observation)>400 else ''}")
 
 
-def run_query(agent: ReActAgent, query: str, verbose: bool = False):
+def run_query(agent, query, verbose):
     print(f"\n❓  {query}")
-    print("─" * 65)
-    print("🤖  Agent thinking…\n")
-
+    print("─" * 70)
     response = agent.run(query)
-
-    # Show scratchpad
     for i, step in enumerate(response.scratchpad, 1):
         print_step(i, step, verbose)
-
-    # Sub-question info
     if response.sub_questions:
-        print(f"\n  🗺  Decomposed into {len(response.sub_questions)} sub-questions:")
-        for q in response.sub_questions:
-            print(f"      • {q}")
-
-    # Critique
+        print(f"\n  🗺 Decomposed: {response.sub_questions}")
     if response.critique:
         verdict = "✅ passed" if response.critique.passed else "🔄 refined"
         print(f"\n  🔍 Self-critique: {verdict}")
-        if response.critique.gaps:
-            for gap in response.critique.gaps:
-                print(f"     Gap: {gap}")
-
-    # Answer
-    print(f"\n\n💬  Answer\n{'─'*65}")
+    print(f"\n\n💬  Answer\n{'─'*70}")
     print(response.answer)
-
-    # Sources
     if response.sources:
-        print(f"\n📄  Sources ({len(response.sources)}):")
+        print(f"\n📄  Sources:")
         for i, s in enumerate(response.sources[:6], 1):
-            print(f"   [{i}] {s['title'][:72]}  (score: {s['score']:.3f})")
-
+            print(f"   [{i}] {s['title'][:70]}  ({s['score']:.3f})")
     print(f"\n⏱  {response.total_steps} steps · {response.latency_ms:.0f}ms")
-    print("─" * 65)
+    print("─" * 70)
+
+
+def run_review(lit_agent, topic, citation_format, n_themes, use_live, output_path, verbose):
+    print(f"\n📖  Generating literature review: '{topic}'")
+    print(f"     Format: {citation_format} | Themes: {n_themes} | Live arXiv: {use_live}")
+    print("─" * 70)
+
+    def _progress(msg):
+        print(f"  {msg}")
+
+    review = lit_agent.run(
+        topic           = topic,
+        citation_format = citation_format,
+        n_themes        = n_themes,
+        use_live_arxiv  = use_live,
+        progress_cb     = _progress,
+    )
+
+    print(f"\n✅  Done! {review.total_papers} papers · {review.latency_ms/1000:.1f}s")
+
+    md = review.to_markdown()
+
+    if output_path:
+        Path(output_path).write_text(md, encoding="utf-8")
+        print(f"📄  Saved to: {output_path}")
+    else:
+        out_path = f"lit_review_{topic[:30].replace(' ','_')}.md"
+        Path(out_path).write_text(md, encoding="utf-8")
+        print(f"📄  Saved to: {out_path}")
 
 
 def main():
@@ -138,50 +180,37 @@ def main():
     if args.notes:
         mem = ResearchMemory()
         notes = mem.all_notes()
-        if notes:
-            print(f"\n📌  {len(notes)} research notes:\n")
-            for note in notes:
-                src = f"  [{note.source}]" if note.source else ""
-                print(f"  {note.key}{src}:\n  {note.content}\n")
-        else:
-            print("No research notes saved yet.")
+        print(f"\n📌  {len(notes)} notes:\n")
+        for n in notes:
+            print(f"  {n.key}: {n.content[:100]}")
         return
 
     print(BANNER)
-    print(f"Model      : {config.MODEL_KEY}  ({config.EMBEDDING_MODEL})")
-    print(f"Chunk size : {config.DEFAULT_CHUNK} tokens")
-    print(f"Top-K      : {args.top_k}")
-    print()
-
     print("Loading corpus…")
     chunks = load_corpus()
-    print(f"  {len(chunks):,} chunks ready.\n")
+    print(f"  {len(chunks):,} chunks ready.")
 
-    print(f"Building BGE retriever…")
-    dense = Retriever.build(
-        model_key=config.MODEL_KEY,
-        chunks=chunks,
-        chunk_size=config.DEFAULT_CHUNK,
-        index_dir=config.RESULTS_DIR / "indices",
-    )
-    print("  BGE retriever ready.")
-    print("  Building BM25 fallback…")
-    bm25 = BM25Retriever(chunks)
+    dense, bm25, session_idx, router = build_system(chunks)
 
     conv_mem = ConversationMemory()
     res_mem  = ResearchMemory()
-    agent    = ReActAgent(dense, bm25, conv_mem, res_mem)
-    print("  Agent ready.\n")
+    agent    = ReActAgent(router, bm25, session_idx, conv_mem, res_mem)
+    lit_agent = LiteratureAgent(router, bm25, session_idx)
 
-    # Single-query mode
-    if args.query:
-        run_query(agent, args.query, verbose=args.verbose)
+    # Literature review mode
+    if args.review:
+        run_review(lit_agent, args.review, args.format, args.themes,
+                   args.live, args.output, args.verbose)
         return
 
-    # Interactive mode
-    print("Ask anything about ML research. Type 'quit' to exit.")
-    print("Commands: 'notes' — show saved notes | 'clear' — reset memory\n")
-    print("─" * 65)
+    # Single query mode
+    if args.query:
+        run_query(agent, args.query, args.verbose)
+        return
+
+    # Interactive Q&A
+    print("Ask anything about ML research. Commands: 'review <topic>' | 'notes' | 'clear' | 'quit'\n")
+    print("─" * 70)
 
     while True:
         try:
@@ -195,17 +224,21 @@ def main():
         if query.lower() in {"quit", "exit", "q"}:
             print("Goodbye!")
             break
-        if query.lower() == "notes":
-            notes = res_mem.all_notes()
-            for n in notes:
-                print(f"  {n.key}: {n.content[:80]}")
-            continue
         if query.lower() == "clear":
             conv_mem.clear()
             print("  Conversation memory cleared.")
             continue
+        if query.lower() == "notes":
+            for n in res_mem.all_notes():
+                print(f"  {n.key}: {n.content[:80]}")
+            continue
+        if query.lower().startswith("review "):
+            topic = query[7:].strip()
+            run_review(lit_agent, topic, args.format, args.themes,
+                       args.live, args.output, args.verbose)
+            continue
 
-        run_query(agent, query, verbose=args.verbose)
+        run_query(agent, query, args.verbose)
 
 
 if __name__ == "__main__":
