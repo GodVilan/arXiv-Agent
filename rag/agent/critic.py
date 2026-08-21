@@ -6,7 +6,7 @@ import json
 import logging
 import re
 from dataclasses import dataclass
-from google import genai
+from rag.llm import get_client
 from google.genai import types
 from rag import config
 
@@ -52,7 +52,7 @@ class CritiqueResult:
 
 class AnswerCritic:
     def __init__(self) -> None:
-        self._client = genai.Client(api_key=config.GEMINI_API_KEY)
+        self._client = get_client()
         self._cfg    = types.GenerateContentConfig(
             system_instruction=_SYSTEM,
             temperature=0.0,

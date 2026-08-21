@@ -4,7 +4,7 @@ memory_consolidator.py – Background insight extraction daemon for arXiv-Agent 
 import json
 import logging
 import re
-from google import genai
+from rag.llm import get_client
 from google.genai import types
 from rag import config
 from rag.sources.project_manager import ProjectManager
@@ -46,7 +46,7 @@ Guidelines:
 class MemoryConsolidator:
     def __init__(self, pm: ProjectManager) -> None:
         self.pm = pm
-        self.client = genai.Client(api_key=config.GEMINI_API_KEY)
+        self.client = get_client()
 
     def consolidate(self, research_id: str, last_query: str, last_response: str) -> None:
         """Runs in background or main timeline post-run to extract cognitive insights."""

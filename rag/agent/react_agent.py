@@ -9,9 +9,9 @@ import logging
 import re
 import time
 from dataclasses import dataclass, field
-from google import genai
 from google.genai import types
 from rag import config
+from rag.llm import get_client
 from rag.sources.source_router import SourceConfig
 from rag.agent.tools import build_tool_registry, format_tool_descriptions
 from rag.agent.memory import ConversationMemory, ResearchMemory
@@ -109,6 +109,22 @@ class AgentResponse:
     out_of_scope:  bool  = False
 
 
+@dataclass
+class GatherResult:
+    """Evidence gathered by the ReAct loop before the final answer is written.
+
+    Separating gathering (slow, multi-step) from answer synthesis (streamable) lets
+    the UI show reasoning progress, then stream the answer token-by-token.
+    """
+    combined:      str
+    steps:         list[Step]
+    sub_questions: list[str]
+    is_complex:    bool
+    started_at:    float
+    out_of_scope:  bool = False
+    oos_reply:     str  = ""
+
+
 class ReActAgent:
     def __init__(self, router, bm25, session_index,
                  conv_memory: ConversationMemory | None = None,
@@ -128,18 +144,25 @@ class ReActAgent:
         self._research = research_memory or ResearchMemory()
         self._planner  = QueryPlanner()
         self._critic   = AnswerCritic()
-        self._client   = genai.Client(api_key=config.GEMINI_API_KEY)
+        self._client   = get_client()
+        # Populated by stream_synthesis() once the streamed answer completes.
+        self.last_response: AgentResponse | None = None
 
     # ── Public entry point ─────────────────────────────────────────────────────
 
-    def run(
+    def gather(
         self, query: str,
         allowed_paper_ids: set[str] | None = None,
         source_cfg: SourceConfig | None = None,
         use_arxiv: bool = True,
         custom_instructions: str | None = None,
         step_callback: Callable | None = None
-    ) -> AgentResponse:
+    ) -> GatherResult:
+        """Phase 1: scope-check, plan, and run the ReAct loop to gather evidence.
+
+        Returns the combined context and reasoning steps without writing the final
+        answer, so the caller can then either synthesise (run) or stream it.
+        """
         self._allowed_paper_ids = allowed_paper_ids
         self._source_config = source_cfg
         self._use_arxiv = use_arxiv
@@ -150,14 +173,10 @@ class ReActAgent:
 
         # 1. Scope check — fast, before anything else
         if not self._is_in_scope(query):
-            reply = self._generate_out_of_scope_reply(query)
-            self._memory.add_assistant(reply)
-            return AgentResponse(
-                answer       = reply,
-                scratchpad   = [],
-                sources      = [],
-                out_of_scope = True,
-                latency_ms   = round((time.monotonic() - t0) * 1000, 1),
+            return GatherResult(
+                combined="", steps=[], sub_questions=[], is_complex=False,
+                started_at=t0, out_of_scope=True,
+                oos_reply=self._generate_out_of_scope_reply(query),
             )
 
         # 2. Plan
@@ -175,10 +194,40 @@ class ReActAgent:
                     f"[Sub-question: {sub_q}]\n{context}" if is_complex else context
                 )
 
-        combined = "\n\n".join(all_context)
+        return GatherResult(
+            combined="\n\n".join(all_context), steps=all_steps,
+            sub_questions=sub_questions, is_complex=is_complex, started_at=t0,
+        )
+
+    def run(
+        self, query: str,
+        allowed_paper_ids: set[str] | None = None,
+        source_cfg: SourceConfig | None = None,
+        use_arxiv: bool = True,
+        custom_instructions: str | None = None,
+        step_callback: Callable | None = None
+    ) -> AgentResponse:
+        g = self.gather(query, allowed_paper_ids, source_cfg, use_arxiv,
+                        custom_instructions, step_callback)
+
+        # 1. Out of scope — short-circuit
+        if g.out_of_scope:
+            self._memory.add_assistant(g.oos_reply)
+            return AgentResponse(
+                answer       = g.oos_reply,
+                scratchpad   = [],
+                sources      = [],
+                out_of_scope = True,
+                latency_ms   = round((time.monotonic() - g.started_at) * 1000, 1),
+            )
+
+        all_steps    = g.steps
+        combined     = g.combined
+        sub_questions = g.sub_questions
+        is_complex   = g.is_complex
 
         # 3. Synthesise
-        if is_complex and all_context:
+        if is_complex and combined:
             final_answer = self._synthesise(query, combined)
         else:
             finish_steps = [s for s in all_steps if s.is_final]
@@ -207,7 +256,7 @@ class ReActAgent:
 
         self._memory.add_assistant(final_answer)
         sources = self._extract_sources(all_steps)
-        latency = round((time.monotonic() - t0) * 1000, 1)
+        latency = round((time.monotonic() - g.started_at) * 1000, 1)
 
         return AgentResponse(
             answer        = final_answer,
@@ -219,10 +268,81 @@ class ReActAgent:
             latency_ms    = latency,
         )
 
+    # ── Streaming answer (Phase 2) ─────────────────────────────────────────────
+
+    def stream_synthesis(self, query: str, gathered: GatherResult):
+        """Phase 2 generator: yield the final answer token-by-token for st.write_stream.
+
+        The complete, citation-wrapped AgentResponse (with steps, sources, critique)
+        is stored on self.last_response once the stream is exhausted.
+
+        Note: unlike run(), the streaming path does not perform the critic's corrective
+        re-search loop — the answer is already being shown as it is written. The critique
+        verdict is still computed and surfaced.
+        """
+        if gathered.out_of_scope:
+            self._memory.add_assistant(gathered.oos_reply)
+            self.last_response = AgentResponse(
+                answer=gathered.oos_reply, scratchpad=[], sources=[], out_of_scope=True,
+                latency_ms=round((time.monotonic() - gathered.started_at) * 1000, 1),
+            )
+            yield gathered.oos_reply
+            return
+
+        if not gathered.combined.strip():
+            fallback = "I could not find relevant information in the corpus for this query."
+            self._memory.add_assistant(fallback)
+            self.last_response = AgentResponse(
+                answer=fallback, scratchpad=gathered.steps,
+                sources=self._extract_sources(gathered.steps),
+                sub_questions=gathered.sub_questions if gathered.is_complex else [],
+                total_steps=len(gathered.steps),
+                latency_ms=round((time.monotonic() - gathered.started_at) * 1000, 1),
+            )
+            yield fallback
+            return
+
+        buffer: list[str] = []
+        for chunk in self._synthesise_stream(query, gathered.combined):
+            buffer.append(chunk)
+            yield chunk
+
+        raw_answer = "".join(buffer).strip() or \
+            "I could not find relevant information in the corpus for this query."
+
+        critique = self._critic.evaluate(query, raw_answer, gathered.combined)
+        final_answer = self._wrap_citations(raw_answer, self._build_papers_lookup())
+
+        self._memory.add_assistant(final_answer)
+        self.last_response = AgentResponse(
+            answer        = final_answer,
+            scratchpad    = gathered.steps,
+            sources       = self._extract_sources(gathered.steps),
+            critique      = critique,
+            sub_questions = gathered.sub_questions if gathered.is_complex else [],
+            total_steps   = len(gathered.steps),
+            latency_ms    = round((time.monotonic() - gathered.started_at) * 1000, 1),
+        )
+
     # ── Scope check ────────────────────────────────────────────────────────────
 
+    # Terms that make a query unambiguously in-scope. Presence of any of these skips
+    # the LLM scope classifier entirely, removing one Gemini round-trip from the hot path.
+    _IN_SCOPE_TERMS = frozenset({
+        "machine learning", "deep learning", "neural network", "transformer",
+        "llm", "language model", "embedding", "fine-tun", "pretrain", "rlhf",
+        "lora", "diffusion", "gradient", "attention", "arxiv", "paper", "dataset",
+        "benchmark", "reinforcement learning", "supervised", "unsupervised",
+        "convolution", "gan", "bert", "gpt", "backprop", "overfit", "regulariz",
+        "hyperparameter", "quantization", "distillation", "retrieval", "rag",
+        "catastrophic forgetting", "continual learning", "few-shot", "zero-shot",
+    })
+
     def _is_in_scope(self, query: str) -> bool:
-        """Fast binary check: is this an ML/AI research question?"""
+        """Is this an ML/AI research question? Keyword fast-path, then LLM fallback."""
+        q = query.lower()
+        if any(term in q for term in self._IN_SCOPE_TERMS):
+            return True
         try:
             resp = self._client.models.generate_content(
                 model=config.GEMINI_MODEL,
@@ -361,7 +481,6 @@ class ReActAgent:
             step = Step(thought, action, action_input, observation)
             scratchpad.append(step)
             observations.append(observation)
-            time.sleep(0.3)
 
         return scratchpad, "\n\n".join(observations)
 
@@ -414,17 +533,20 @@ class ReActAgent:
 
     # ── Synthesis ──────────────────────────────────────────────────────────────
 
-    def _synthesise(self, query: str, context: str) -> str:
-        prompt = (
+    @staticmethod
+    def _synthesis_prompt(query: str, context: str) -> str:
+        return (
             f"Based on the research context below, write a comprehensive answer.\n\n"
             f"Question: {query}\n\nContext:\n{context[:3500]}\n\n"
             f"Write a detailed, well-structured answer. "
             f"Cite papers as [Source: Paper Title]."
         )
+
+    def _synthesise(self, query: str, context: str) -> str:
         try:
             resp = self._client.models.generate_content(
                 model=config.GEMINI_MODEL,
-                contents=prompt,
+                contents=self._synthesis_prompt(query, context),
                 config=types.GenerateContentConfig(
                     temperature=0.0,
                     max_output_tokens=config.GEMINI_MAX_TOKENS,
@@ -434,6 +556,28 @@ class ReActAgent:
         except Exception as exc:
             log.error("Synthesis failed: %s", exc)
             return context[:1000]
+
+    def _synthesise_stream(self, query: str, context: str):
+        """Yield synthesis text chunks. Falls back to a single blocking call if the
+        streaming API yields nothing (immediate error or empty response)."""
+        produced = False
+        try:
+            for chunk in self._client.models.generate_content_stream(
+                model=config.GEMINI_MODEL,
+                contents=self._synthesis_prompt(query, context),
+                config=types.GenerateContentConfig(
+                    temperature=0.0,
+                    max_output_tokens=config.GEMINI_MAX_TOKENS,
+                ),
+            ):
+                text = getattr(chunk, "text", None)
+                if text:
+                    produced = True
+                    yield text
+        except Exception as exc:
+            log.error("Streaming synthesis failed: %s", exc)
+        if not produced:
+            yield self._synthesise(query, context)
 
     # ── Prompt builders ────────────────────────────────────────────────────────
 

@@ -16,7 +16,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Callable
 
-from google import genai
+from rag.llm import get_client
 from google.genai import types
 
 from rag import config
@@ -167,7 +167,7 @@ class LiteratureAgent:
         self._router  = router
         self._bm25    = bm25
         self._session = session_index
-        self._client  = genai.Client(api_key=config.GEMINI_API_KEY)
+        self._client  = get_client()
         self._formatter = None
         self._cited_papers: dict[str, PaperMeta] = {}
         

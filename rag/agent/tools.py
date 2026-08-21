@@ -136,9 +136,9 @@ def _trace_bibliography(query: str, router, allowed_paper_ids: set[str] | None =
     if not bib_text.strip():
         bib_text = "\n\n".join(c.text for c, _ in results if c.paper_id == top_pid)
         
-    from google import genai
     from google.genai import types
-    client = genai.Client(api_key=config.GEMINI_API_KEY)
+    from rag.llm import get_client
+    client = get_client()
     
     system_instruction = (
         "You are a bibliography extractor. Extract up to 5 key papers cited in this paper text.\n"

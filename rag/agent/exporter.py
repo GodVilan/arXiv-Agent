@@ -176,16 +176,18 @@ def _markdown_to_latex(text: str) -> str:
     
     return text
 
-def export_to_latex(review, output_path: str | Path) -> Path:
+def render_latex(review) -> str:
     """
-    Exports a LiteratureReview object to an academic LaTeX (.tex) format.
+    Renders a LiteratureReview object to an academic LaTeX (.tex) source string.
+    This is the single canonical builder used by both the file exporter and the UI
+    download button — do not duplicate this logic elsewhere.
     """
     from rag.agent.citation_formatter import CitationFormatter
     fmt = CitationFormatter(review.citation_format)
-    
+
     # Clean topic for title
     title_clean = _markdown_to_latex(review.topic)
-    
+
     latex_lines = [
         "\\documentclass[11pt,a4paper]{article}",
         "\\usepackage[utf8]{inputenc}",
@@ -196,36 +198,35 @@ def export_to_latex(review, output_path: str | Path) -> Path:
         "\\usepackage{microtype}",
         "\\usepackage{parskip}",
         "",
-        f"\\title{{Literature Review:\\\\ \\textbf{{{title_clean}}}}}\\n",
+        f"\\title{{Literature Review:\\\\ \\textbf{{{title_clean}}}}}",
         "\\author{\\textbf{arXiv Agent} \\\\ Automated Research Assistant}",
         f"\\date{{Generated: \\today \\\\ \\small Style: {review.citation_format}}}",
         "",
         "\\begin{document}",
         "\\maketitle",
-        "\\hr",
         "",
         "\\section{Introduction}",
         _markdown_to_latex(review.introduction),
         ""
     ]
-    
+
     for idx, sec in enumerate(review.sections, 2):
         latex_lines.append(f"\\section{{{_markdown_to_latex(sec.theme.title)}}}")
         latex_lines.append(_markdown_to_latex(sec.content))
         latex_lines.append("")
-        
+
     latex_lines.append("\\section{Research Gaps and Open Problems}")
     latex_lines.append(_markdown_to_latex(review.gaps))
     latex_lines.append("")
-    
+
     latex_lines.append("\\section{Future Directions}")
     latex_lines.append(_markdown_to_latex(review.future_work))
     latex_lines.append("")
-    
+
     latex_lines.append("\\section{Conclusion}")
     latex_lines.append(_markdown_to_latex(review.conclusion))
     latex_lines.append("")
-    
+
     if review.references:
         latex_lines.append("\\section*{References}")
         latex_lines.append("\\begin{description}")
@@ -235,10 +236,15 @@ def export_to_latex(review, output_path: str | Path) -> Path:
             ref_str = re.sub(r"^\[\d+\]\s*", "", ref_str)
             latex_lines.append(f"  \\item[{review.citation_format.upper()} \\#{idx}] {_markdown_to_latex(ref_str)}")
         latex_lines.append("\\end{description}")
-        
+
     latex_lines.append("\\end{document}")
-    
-    out_text = "\n".join(latex_lines)
+
+    return "\n".join(latex_lines)
+
+
+def export_to_latex(review, output_path: str | Path) -> Path:
+    """Exports a LiteratureReview object to an academic LaTeX (.tex) file."""
+    out_text = render_latex(review)
     Path(output_path).write_text(out_text, encoding="utf-8")
     log.info("Saved review LaTeX to %s", output_path)
     return Path(output_path)

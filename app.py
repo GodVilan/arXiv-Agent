@@ -23,7 +23,7 @@ from rag.agent import (
     ConversationMemory, ResearchMemory,
 )
 from rag.sources.project_manager import ProjectManager
-from rag.agent.exporter import export_to_docx, export_to_latex, _markdown_to_latex
+from rag.agent.exporter import export_to_docx, render_latex
 from rag.agent.citation_formatter import CitationFormatter, PaperMeta
 from rag.agent.literature_agent import LiteratureReview, Theme, ThemeSection
 
@@ -199,19 +199,6 @@ function toggleCitationCard(element) {
         card.style.display = "none";
     }
 }
-
-document.addEventListener('keydown', function(e) {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        var forms = document.querySelectorAll('form');
-        for (var i = 0; i < forms.length; i++) {
-            var submit = forms[i].querySelector('button[type="submit"]');
-            if (submit) {
-                submit.click();
-                break;
-            }
-        }
-    }
-});
 </script>
 
 <style>
@@ -582,12 +569,27 @@ def _load_metadata():
     p = config.DATA_DIR / "metadata.json"
     return json.load(open(p)) if p.exists() else []
 
+def submit_query(pm, conversation_id: str, text: str,
+                 use_corpus, use_arxiv, use_session) -> None:
+    """
+    Single entry point for every Q&A composer (landing card + in-thread chat_input).
+    Persists the active source toggles, forces Q&A mode, records the user turn, and
+    flags the agent to run on the next rerun. Caller is responsible for st.rerun().
+    """
+    pm.update_conversation_toggles(
+        conversation_id, int(bool(use_corpus)), int(bool(use_arxiv)), int(bool(use_session))
+    )
+    pm.update_conversation_mode(conversation_id, "qa")
+    pm.add_message(conversation_id, "user", text.strip())
+    st.session_state["trigger_agent_run"] = True
+
+
 def _auto_title_thread(conversation_id: str, query: str):
     """Automatically generate a neat short title for the conversation thread based on the first query."""
     try:
-        from google import genai
         from google.genai import types
-        client = genai.Client(api_key=config.GEMINI_API_KEY)
+        from rag.llm import get_client
+        client = get_client()
         resp = client.models.generate_content(
             model=config.GEMINI_MODEL,
             contents=f"Summarize this question into a very short, clean title (3-4 words max, no quotes, no period):\n'{query}'",
@@ -1055,12 +1057,8 @@ if active_r and active_cid and pm:
                         submit_clicked = st.form_submit_button("➤ Ask Agent", use_container_width=True)
                         
                         if submit_clicked and user_query.strip():
-                            # Save toggles
-                            pm.update_conversation_toggles(active_cid, int(cb_corpus), int(cb_arxiv), int(cb_session))
-                            # Set mode
-                            pm.update_conversation_mode(active_cid, "qa")
-                            pm.add_message(active_cid, "user", user_query.strip())
-                            st.session_state["trigger_agent_run"] = True
+                            submit_query(pm, active_cid, user_query,
+                                         cb_corpus, cb_arxiv, cb_session)
                             st.rerun()
                     else:
                         st.markdown("<p style='font-size:12px;color:#8e8aa8;'>Generate a full academic literature review with citation formatting (APA, Chicago, IEEE, etc.).</p>", unsafe_allow_html=True)
@@ -1111,7 +1109,7 @@ if active_r and active_cid and pm:
                                 # Save to message logs as JSON
                                 serialized_review = serialize_review(review_obj)
                                 pm.add_message(active_cid, "user", f"Generate a literature review on: {lit_topic.strip()}")
-                                pm.add_message(active_cid, "assistant", serialized_review)
+                                pm.add_message(active_cid, "assistant", serialized_review, message_type="lit_review")
                                 
                                 # Auto-title thread
                                 _auto_title_thread(active_cid, f"Review: {lit_topic.strip()}")
@@ -1153,9 +1151,15 @@ if active_r and active_cid and pm:
             with chat_container:
                 for idx_m, msg in enumerate(messages):
                     if msg["role"] == "user":
-                        st.markdown(f'<div class="msg-user"><div class="msg-user-bubble">{msg["content"]}</div></div>', unsafe_allow_html=True)
+                        with st.chat_message("user", avatar="🧑"):
+                            st.markdown(msg["content"])
                     else:
-                        lit_review_obj = deserialize_review(msg["content"])
+                        # Dispatch on the explicit message_type (legacy reviews were
+                        # backfilled during the DB migration) — no more JSON-sniffing.
+                        lit_review_obj = (
+                            deserialize_review(msg["content"])
+                            if msg.get("message_type") == "lit_review" else None
+                        )
                         if lit_review_obj:
                             # Render inline literature review tabbed board
                             st.markdown(f"""
@@ -1179,54 +1183,9 @@ if active_r and active_cid and pm:
                                         use_container_width=True
                                     )
                                 with col_lb:
-                                    from rag.agent.citation_formatter import CitationFormatter
-                                    fmt = CitationFormatter(lit_review_obj.citation_format)
-                                    latex_lines = [
-                                        "\\documentclass[11pt,a4paper]{article}",
-                                        "\\usepackage[utf8]{inputenc}",
-                                        "\\usepackage{geometry}",
-                                        "\\geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}",
-                                        "\\usepackage{hyperref}",
-                                        "\\usepackage{マイクロタイプ}",
-                                        "\\usepackage{parskip}",
-                                        "",
-                                        f"\\title{{Literature Review:\\\\ \\textbf{{{_markdown_to_latex(lit_review_obj.topic)}}}}}\\n",
-                                        "\\author{\\textbf{arXiv Agent} \\\\ Automated Research Assistant}",
-                                        f"\\date{{Generated: \\today \\\\ \\small Style: {lit_review_obj.citation_format}}}",
-                                        "",
-                                        "\\begin{document}",
-                                        "\\maketitle",
-                                        "",
-                                        "\\section{Introduction}",
-                                        _markdown_to_latex(lit_review_obj.introduction),
-                                        ""
-                                    ]
-                                    for idx, sec in enumerate(lit_review_obj.sections, 2):
-                                        latex_lines.append(f"\\section{{{_markdown_to_latex(sec.theme.title)}}}")
-                                        latex_lines.append(_markdown_to_latex(sec.content))
-                                        latex_lines.append("")
-                                    latex_lines.append("\\section{Research Gaps and Open Problems}")
-                                    latex_lines.append(_markdown_to_latex(lit_review_obj.gaps))
-                                    latex_lines.append("")
-                                    latex_lines.append("\\section{Future Directions}")
-                                    latex_lines.append(_markdown_to_latex(lit_review_obj.future_work))
-                                    latex_lines.append("")
-                                    latex_lines.append("\\section{Conclusion}")
-                                    latex_lines.append(_markdown_to_latex(lit_review_obj.conclusion))
-                                    latex_lines.append("")
-                                    if lit_review_obj.references:
-                                        latex_lines.append("\\section*{References}")
-                                        latex_lines.append("\\begin{description}")
-                                        for ref_idx, ref in enumerate(lit_review_obj.references, 1):
-                                            ref_str = fmt._format_one(ref, ref_idx)
-                                            ref_str = re.sub(r"^\[\d+\]\s*", "", ref_str)
-                                            latex_lines.append(f"  \\item[{lit_review_obj.citation_format.upper()} \\#{ref_idx}] {_markdown_to_latex(ref_str)}")
-                                        latex_lines.append("\\end{description}")
-                                    latex_lines.append("\\end{document}")
-                                    
                                     st.download_button(
                                         label="📥 LaTeX (.tex)",
-                                        data="\n".join(latex_lines),
+                                        data=render_latex(lit_review_obj),
                                         file_name=f"literature_review_{lit_review_obj.citation_format}.tex",
                                         mime="application/x-tex",
                                         key=f"dl_tex_{msg['message_id']}",
@@ -1301,7 +1260,11 @@ if active_r and active_cid and pm:
                                         st.info("No references tracked.")
                         else:
                             hydrated_content = hydrate_citations(msg["content"], papers_by_id)
-                            st.markdown(f'<div class="msg-assistant"><div class="msg-avatar">🤖</div><div class="msg-bubble">{hydrated_content}</div></div>', unsafe_allow_html=True)
+                            with st.chat_message("assistant", avatar="🤖"):
+                                # Render the answer as genuine markdown. Content is NOT wrapped
+                                # in a block-level <div> anymore, so headings/lists/code/tables
+                                # from the model parse correctly; inline citation spans still pass through.
+                                st.markdown(hydrated_content, unsafe_allow_html=True)
 
                             scratchpad_obj = msg.get("scratchpad")
                             scratchpad_list = []
@@ -1406,11 +1369,7 @@ if active_r and active_cid and pm:
                                 with col_act5:
                                     if st.button("🔄", key=f"regen_point_{msg['message_id']}", help="Regenerate from this message onward", use_container_width=True):
                                         try:
-                                            conn = pm._get_connection()
-                                            cursor = conn.cursor()
-                                            cursor.execute("DELETE FROM messages WHERE conversation_id = ? AND created_at >= ?", (active_cid, msg["created_at"]))
-                                            conn.commit()
-                                            conn.close()
+                                            pm.delete_messages_from(active_cid, msg["created_at"])
                                             st.session_state["trigger_agent_run"] = True
                                             st.toast("🔄 Regenerating response...")
                                             st.rerun()
@@ -1429,21 +1388,25 @@ if active_r and active_cid and pm:
 
             st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
 
-            # Active chat bottom input form
+            # Active chat bottom composer — native Enter interface.
+            # st.chat_input sends on Enter, supports Shift+Enter newlines, auto-clears,
+            # and disables itself while the agent is running.
             if active_conv and active_conv["mode"] == "lit_review":
                 # If review has already been generated, offer chat follow-ups or reset
                 st.markdown("<p style='font-size:11px;color:#6b68a0;font-style:italic;'>Literature Review Generated! Toggle to Q&A Mode to converse further or delete this conversation to generate a new topic review.</p>", unsafe_allow_html=True)
             else:
-                with st.form("chat_form_main", clear_on_submit=True):
-                    c_in, c_btn = st.columns([9, 1])
-                    with c_in:
-                        user_input = st.text_input("q", placeholder="Ask the agent anything about AI research...", label_visibility="collapsed")
-                    with c_btn:
-                        submitted = st.form_submit_button("➤", use_container_width=True)
-                        
-                if submitted and user_input.strip() and pm:
-                    pm.add_message(active_cid, "user", user_input.strip())
-                    st.session_state["trigger_agent_run"] = True
+                user_input = st.chat_input(
+                    "Ask the agent anything about AI research…",
+                    disabled=st.session_state.get("trigger_agent_run", False),
+                    key="chat_main_composer",
+                )
+                if user_input and user_input.strip() and pm:
+                    submit_query(
+                        pm, active_cid, user_input,
+                        bool(active_conv.get("use_corpus", 1)) if active_conv else True,
+                        bool(active_conv.get("use_arxiv", 1)) if active_conv else True,
+                        bool(active_conv.get("use_session", 1)) if active_conv else True,
+                    )
                     st.rerun()
 
         # Agent processing
@@ -1470,28 +1433,49 @@ if active_r and active_cid and pm:
                 use_arxiv = bool(active_conv.get("use_arxiv", 1)) if active_conv else True
                 instr_val = active_r.get("instructions") if active_r else None
 
+                # Phase 1: gather evidence — reasoning steps stream into the status box.
                 with st.status("🤖 Agent thinking…", expanded=True) as status:
                     st.write("🔎 Evaluating scope & reasoning over papers…")
-                    
+
                     step_placeholder = st.empty()
                     def on_agent_step(step_num, thought, action, action_input):
                         with step_placeholder.container():
                             st.write(f"🧠 **Step {step_num + 1}:** {thought}")
                             st.markdown(f"└ ⚡ *Calling Tool:* `{action}` with input `{action_input[:80]}...`")
-                            
-                    response = agent.run(
+
+                    gathered = agent.gather(
                         query,
                         allowed_paper_ids=allowed_pids,
                         source_cfg=source_cfg,
                         use_arxiv=use_arxiv,
                         custom_instructions=instr_val,
-                        step_callback=on_agent_step
+                        step_callback=on_agent_step,
                     )
-                    if response.out_of_scope:
-                        status.update(label="Out of scope", state="complete")
-                    else:
-                        st.write(f"✅ Done — {response.total_steps} steps · {response.latency_ms:.0f}ms")
-                        status.update(label="Done", state="complete")
+                    status.update(
+                        label="Out of scope" if gathered.out_of_scope else "✍️ Writing answer…",
+                    )
+
+                # Phase 2: stream the final answer token-by-token into the assistant bubble.
+                with st.chat_message("assistant", avatar="🤖"):
+                    try:
+                        st.write_stream(agent.stream_synthesis(query, gathered))
+                    except Exception as stream_err:
+                        import logging
+                        logging.getLogger(__name__).warning("Answer streaming failed: %s", stream_err)
+                        st.markdown("_Answer generation was interrupted — please retry._")
+
+                response = agent.last_response
+                if response is None:
+                    # Defensive: stream_synthesis always sets last_response, but never render nothing.
+                    from rag.agent.react_agent import AgentResponse
+                    response = AgentResponse(
+                        answer="I could not complete this response — please try again.",
+                        scratchpad=gathered.steps, sources=[],
+                    )
+                status.update(
+                    label="Out of scope" if response.out_of_scope else "Done",
+                    state="complete",
+                )
 
                 # Generate follow-up questions
                 follow_ups = agent.generate_follow_ups(query, response.answer, response.sources)

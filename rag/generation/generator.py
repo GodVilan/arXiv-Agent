@@ -5,7 +5,7 @@ import logging
 import threading
 import time
 
-from google import genai
+from rag.llm import get_client
 from google.genai import types
 
 from rag import config
@@ -37,7 +37,7 @@ class Generator:
     def __init__(self) -> None:
         if not config.GEMINI_API_KEY:
             raise ValueError("GEMINI_API_KEY not set in .env")
-        self._client  = genai.Client(api_key=config.GEMINI_API_KEY)
+        self._client  = get_client()
         self._limiter = _RateLimiter(config.GEMINI_RPM)
         self._cfg     = types.GenerateContentConfig(
             system_instruction=SYSTEM_PROMPT,

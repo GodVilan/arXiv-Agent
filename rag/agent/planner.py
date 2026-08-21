@@ -5,9 +5,9 @@ from __future__ import annotations
 import json
 import logging
 import re
-from google import genai
 from google.genai import types
 from rag import config
+from rag.llm import get_client
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ Rules:
 
 class QueryPlanner:
     def __init__(self) -> None:
-        self._client = genai.Client(api_key=config.GEMINI_API_KEY)
+        self._client = get_client()
         self._cfg    = types.GenerateContentConfig(
             system_instruction=_SYSTEM,
             temperature=0.0,

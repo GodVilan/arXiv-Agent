@@ -21,11 +21,17 @@ class ProjectManager:
     def __init__(self, db_path: Path | None = None) -> None:
         self.db_path = db_path or (config.DATA_DIR / "session_papers.db")
         self._init_db()
+        # Guarantee a usable workspace exists on a fresh or reset database so the app
+        # opens straight into a chat instead of the empty "create a project" wall.
+        self._bootstrap_default_research()
 
     def _get_connection(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(self.db_path)
-        # Enable foreign keys
+        conn = sqlite3.connect(self.db_path, timeout=5.0)
+        # Enable foreign keys, WAL journaling for concurrent reads during writes,
+        # and a busy timeout so brief write locks retry instead of erroring.
         conn.execute("PRAGMA foreign_keys = ON;")
+        conn.execute("PRAGMA journal_mode = WAL;")
+        conn.execute("PRAGMA busy_timeout = 5000;")
         return conn
 
     def _init_db(self) -> None:
@@ -81,10 +87,26 @@ class ProjectManager:
                     role TEXT NOT NULL, -- 'user' or 'assistant'
                     content TEXT NOT NULL,
                     scratchpad TEXT, -- JSON serialized list of steps
+                    message_type TEXT NOT NULL DEFAULT 'text', -- 'text' or 'lit_review'
                     created_at REAL NOT NULL,
                     FOREIGN KEY (conversation_id) REFERENCES conversations(conversation_id) ON DELETE CASCADE
                 )
             """)
+
+            # Lightweight migration: add message_type to pre-existing databases.
+            cursor.execute("PRAGMA table_info(messages)")
+            msg_cols = {row[1] for row in cursor.fetchall()}
+            if "message_type" not in msg_cols:
+                cursor.execute(
+                    "ALTER TABLE messages ADD COLUMN message_type TEXT NOT NULL DEFAULT 'text'"
+                )
+                # Backfill: tag pre-existing serialized literature reviews. serialize_review()
+                # always emits the "is_literature_review" marker key, so this is reliable.
+                cursor.execute(
+                    "UPDATE messages SET message_type = 'lit_review' "
+                    "WHERE message_type = 'text' AND content LIKE '%\"is_literature_review\"%'"
+                )
+                log.info("Migrated messages table: added message_type column and backfilled reviews.")
 
             # 5. Workspace memories table
             cursor.execute("""
@@ -129,20 +151,24 @@ class ProjectManager:
             log.error("Failed to initialize database tables: %s", e)
 
     def _bootstrap_default_research(self) -> None:
-        """Create a default 'General Q&A' research workspace if none exists."""
+        """Create a default 'General Q&A' workspace (with a first thread) if none exists."""
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
-            cursor.execute("SELECT research_id FROM researches WHERE is_default = 1 LIMIT 1")
-            row = cursor.fetchone()
-            if not row:
+            # Only seed when there are no projects at all — never fight the user's own data.
+            cursor.execute("SELECT COUNT(*) FROM researches")
+            if cursor.fetchone()[0] == 0:
                 d_id = "default_research"
                 cursor.execute("""
                     INSERT INTO researches (research_id, name, scope_type, created_at, is_default, instructions, is_starred)
                     VALUES (?, ?, ?, ?, 1, '', 0)
                 """, (d_id, "General Q&A", "all_sources", time.time()))
+                cursor.execute("""
+                    INSERT INTO conversations (conversation_id, research_id, title, use_corpus, use_arxiv, use_session, created_at, is_starred, mode)
+                    VALUES (?, ?, ?, 1, 1, 1, ?, 0, 'qa')
+                """, (str(uuid.uuid4()), d_id, "New Thread", time.time()))
                 conn.commit()
-                log.info("Bootstrapped default 'General Q&A' research workspace.")
+                log.info("Bootstrapped default 'General Q&A' workspace with a starter thread.")
             conn.close()
         except Exception as e:
             log.error("Failed to bootstrap default research: %s", e)
@@ -537,17 +563,22 @@ class ProjectManager:
 
     # ── Messages (Logs) CRUD ───────────────────────────────────────────────────
 
-    def add_message(self, conversation_id: str, role: str, content: str, scratchpad_list: list | None = None) -> str:
-        """Saves a user or assistant message, including serialized scratchpads, to SQLite."""
+    def add_message(self, conversation_id: str, role: str, content: str,
+                    scratchpad_list: list | None = None, message_type: str = "text") -> str:
+        """Saves a user or assistant message, including serialized scratchpads, to SQLite.
+
+        message_type: 'text' for normal chat turns, 'lit_review' for a serialized
+        LiteratureReview payload — lets the UI dispatch without JSON-sniffing.
+        """
         m_id = str(uuid.uuid4())
         scratchpad_json = json.dumps(scratchpad_list) if scratchpad_list is not None else None
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO messages (message_id, conversation_id, role, content, scratchpad, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (m_id, conversation_id, role, content, scratchpad_json, time.time()))
+                INSERT INTO messages (message_id, conversation_id, role, content, scratchpad, message_type, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (m_id, conversation_id, role, content, scratchpad_json, message_type, time.time()))
             conn.commit()
             conn.close()
             log.debug("Saved chat message from %s to thread %s", role, conversation_id)
@@ -572,13 +603,35 @@ class ProjectManager:
             log.error("Failed to update message content: %s", e)
             return False
 
+    def delete_messages_from(self, conversation_id: str, from_created_at: float) -> int:
+        """
+        Delete every message in a thread at or after `from_created_at` (inclusive).
+        Used by the 'regenerate from here' action. Returns the number of rows removed.
+        Keeps raw SQL out of the UI layer.
+        """
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "DELETE FROM messages WHERE conversation_id = ? AND created_at >= ?",
+                (conversation_id, from_created_at),
+            )
+            deleted = cursor.rowcount
+            conn.commit()
+            conn.close()
+            log.info("Deleted %d message(s) from thread %s (regenerate)", deleted, conversation_id)
+            return deleted
+        except Exception as e:
+            log.error("Failed to delete messages from thread: %s", e)
+            return 0
+
     def get_messages(self, conversation_id: str) -> list[dict]:
         """Loads and formats all messages for a specific conversation thread."""
         try:
             conn = self._get_connection()
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT message_id, role, content, scratchpad, created_at
+                SELECT message_id, role, content, scratchpad, message_type, created_at
                 FROM messages
                 WHERE conversation_id = ?
                 ORDER BY created_at ASC
@@ -591,7 +644,8 @@ class ProjectManager:
                     "role": r[1],
                     "content": r[2],
                     "scratchpad": json.loads(r[3]) if r[3] else [],
-                    "created_at": r[4]
+                    "message_type": r[4] or "text",
+                    "created_at": r[5]
                 }
                 for r in rows
             ]
@@ -833,20 +887,20 @@ class ProjectManager:
             
             # 4. Fetch all messages up to that timestamp
             cursor.execute("""
-                SELECT role, content, scratchpad, created_at
+                SELECT role, content, scratchpad, message_type, created_at
                 FROM messages
                 WHERE conversation_id = ? AND created_at <= ?
                 ORDER BY created_at ASC
             """, (conversation_id, target_time))
             messages_to_copy = cursor.fetchall()
-            
+
             # 5. Insert messages into new branched conversation
             for msg in messages_to_copy:
                 new_mid = str(uuid.uuid4())
                 cursor.execute("""
-                    INSERT INTO messages (message_id, conversation_id, role, content, scratchpad, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (new_mid, new_cid, msg[0], msg[1], msg[2], msg[3]))
+                    INSERT INTO messages (message_id, conversation_id, role, content, scratchpad, message_type, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                """, (new_mid, new_cid, msg[0], msg[1], msg[2], msg[3], msg[4]))
                 
             conn.commit()
             conn.close()
